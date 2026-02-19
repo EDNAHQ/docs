@@ -1,0 +1,136 @@
+---
+title: "Introduction"
+description: "Learn about the HelpGenie API architecture and available resources"
+---
+
+## Single endpoint architecture
+
+The HelpGenie API is served from a single Supabase Edge Function. Every request is a `POST` to the same URL:
+
+```
+POST https://<project-ref>.supabase.co/functions/v1/api
+```
+
+Instead of traditional REST routing with different URL paths per resource, HelpGenie uses a **resource/action pattern** in the request body. The `resource` field selects which entity to operate on, and the `action` field determines what to do.
+
+```json
+{
+  "resource": "genies",
+  "action": "get",
+  "id": "abc-123"
+}
+```
+
+The API also supports standard REST-style HTTP method routing as an alternative. See [Making requests](/getting-started/making-requests) for details on both approaches.
+
+## Request and response format
+
+Every request body follows this structure:
+
+<ParamField body="resource" type="string" required>
+  The resource to operate on (e.g. `genies`, `knowledge-base`, `leads`).
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  The operation to perform (e.g. `get`, `all`, `list`, `create`, `update`, `delete`).
+</ParamField>
+
+<ParamField body="id" type="string">
+  The identifier of a specific record. Required for `get`, `update`, and `delete` actions.
+</ParamField>
+
+<ParamField body="data" type="object">
+  The payload for `create` and `update` actions. Contents vary by resource.
+</ParamField>
+
+Every response uses a consistent envelope:
+
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+On failure, the response includes an `error` object instead:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Resource not found",
+    "status": 404
+  }
+}
+```
+
+See [Error handling](/getting-started/errors) for the full list of error codes.
+
+## Available resources
+
+The API exposes 13 resources organized into six groups.
+
+### Agents
+
+| Resource | Description |
+| --- | --- |
+| `genies` | Voice AI agents. Create, configure, update, and delete genies. |
+| `genie-groups` | Groups for organizing genies. Supports ordering and agent counts. |
+| `conversations` | Conversation records. Sync from ElevenLabs, analyze, and manage metadata. |
+
+### Knowledge
+
+| Resource | Description |
+| --- | --- |
+| `knowledge-base` | Documents that provide context to agents. Supports PDFs, websites, videos, and text. |
+| `document-folders` | Folders for organizing knowledge base documents. |
+
+### Voice
+
+| Resource | Description |
+| --- | --- |
+| `voices` | Voice discovery and favorites. Browse popular voices, track usage, and save favorites. |
+| `voice-collections` | Custom collections for organizing saved voices. |
+
+### CRM
+
+| Resource | Description |
+| --- | --- |
+| `leads` | Leads captured during agent conversations. Includes lifecycle tracking and stats. |
+| `lead-notes` | Notes attached to leads. Supports pinning and ordering. |
+
+### Marketplace
+
+| Resource | Description |
+| --- | --- |
+| `marketplace` | Agent templates available in the marketplace. Browse, create, and manage listings. |
+
+### Platform
+
+| Resource | Description |
+| --- | --- |
+| `profiles` | User profiles and account data. |
+| `teams` | Teams with member management and invitation workflows. |
+| `activities` | Activity event log for auditing and tracking. |
+
+## Authorization and roles
+
+Access is controlled by three user roles:
+
+| Role | Access level |
+| --- | --- |
+| `internal_admin` | Full access to all resources across all users. Can impersonate other users. |
+| `standard_user` | Access to their own resources only. Can create and manage agents, documents, and leads. |
+| `consumer` | Limited read-only access to assigned agents. |
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Authentication" icon="lock" href="/getting-started/authentication">
+    Get a Bearer token and authenticate your first request.
+  </Card>
+  <Card title="Making requests" icon="code" href="/getting-started/making-requests">
+    Learn about request patterns, list vs all, and admin mode.
+  </Card>
+</Columns>

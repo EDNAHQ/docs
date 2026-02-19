@@ -1,0 +1,311 @@
+---
+title: "Activities"
+description: "Query and create audit log entries that track user and system actions"
+---
+
+## List activities
+
+Retrieves a paginated, filterable list of activity log entries. Standard users see only their own activities. Admin users see all activities and can filter by user.
+
+<ParamField body="resource" type="string" required>
+  `activities`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `all`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number">
+      Maximum number of records to return. Defaults to `50`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Number of records to skip for pagination. Defaults to `0`.
+    </ParamField>
+    <ParamField body="adminMode" type="boolean">
+      Admin only. When `true`, returns activities for all users.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Filter activities to a specific user.
+    </ParamField>
+    <ParamField body="filters" type="object">
+      Optional filter criteria.
+      <Expandable title="properties">
+        <ParamField body="category" type="string">
+          Filter by activity category.
+        </ParamField>
+        <ParamField body="activityType" type="string">
+          Filter by activity type.
+        </ParamField>
+        <ParamField body="action" type="string">
+          Filter by action performed.
+        </ParamField>
+        <ParamField body="startDate" type="string">
+          ISO 8601 timestamp. Return activities created on or after this date.
+        </ParamField>
+        <ParamField body="endDate" type="string">
+          ISO 8601 timestamp. Return activities created on or before this date.
+        </ParamField>
+        <ParamField body="resourceType" type="string">
+          Filter by the type of resource the activity relates to.
+        </ParamField>
+        <ParamField body="resourceId" type="string">
+          Filter by the ID of the resource the activity relates to.
+        </ParamField>
+        <ParamField body="searchTerm" type="string">
+          Search term that matches against the activity title.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "activities",
+  action: "all",
+  data: {
+    limit: 20,
+    offset: 0,
+    filters: {
+      category: "genie",
+      startDate: "2025-01-01T00:00:00Z",
+      endDate: "2025-12-31T23:59:59Z",
+      searchTerm: "created",
+    },
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="activities" type="Activity[]">
+  Array of activity records.
+  <Expandable title="Activity object">
+    <ResponseField name="id" type="string">
+      Unique activity identifier.
+    </ResponseField>
+    <ResponseField name="activity_type" type="string">
+      The type of activity (e.g., `genie`, `document`, `system`).
+    </ResponseField>
+    <ResponseField name="action" type="string">
+      The action performed (e.g., `created`, `updated`, `deleted`).
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      Human-readable title describing the activity.
+    </ResponseField>
+    <ResponseField name="category" type="string | null">
+      Activity category for grouping.
+    </ResponseField>
+    <ResponseField name="description" type="string | null">
+      Detailed description of the activity.
+    </ResponseField>
+    <ResponseField name="status" type="string | null">
+      Activity status.
+    </ResponseField>
+    <ResponseField name="priority" type="string | null">
+      Activity priority level.
+    </ResponseField>
+    <ResponseField name="resource_type" type="string | null">
+      The type of resource this activity relates to.
+    </ResponseField>
+    <ResponseField name="resource_id" type="string | null">
+      The ID of the related resource.
+    </ResponseField>
+    <ResponseField name="resource_name" type="string | null">
+      The name of the related resource.
+    </ResponseField>
+    <ResponseField name="duration_ms" type="number | null">
+      Duration of the activity in milliseconds, if applicable.
+    </ResponseField>
+    <ResponseField name="metadata" type="object | null">
+      Arbitrary metadata associated with the activity.
+    </ResponseField>
+    <ResponseField name="session_id" type="string | null">
+      Session identifier for grouping related activities.
+    </ResponseField>
+    <ResponseField name="user_id" type="string | null">
+      ID of the user who performed the activity.
+    </ResponseField>
+    <ResponseField name="is_visible" type="boolean | null">
+      Whether the activity is visible in the UI.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the activity was created.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="count" type="number">
+  Total number of matching activities.
+</ResponseField>
+
+<ResponseField name="limit" type="number">
+  The limit that was applied.
+</ResponseField>
+
+<ResponseField name="offset" type="number">
+  The offset that was applied.
+</ResponseField>
+
+---
+
+## Get activity
+
+Retrieves a single activity record by ID. Standard users can only access their own activities.
+
+<ParamField body="resource" type="string" required>
+  `activities`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `get`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The activity ID.
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "activities",
+  action: "get",
+  id: "activity-uuid",
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="activity" type="Activity">
+  The requested activity object. See [Activity object](#list-activities) for field details.
+</ResponseField>
+
+---
+
+## Create activity
+
+Creates a new activity record. Restricted to admin users and service-role callers.
+
+<ParamField body="resource" type="string" required>
+  `activities`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `create`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="activity_type" type="string" required>
+      The type of activity.
+    </ParamField>
+    <ParamField body="action" type="string" required>
+      The action that was performed.
+    </ParamField>
+    <ParamField body="title" type="string" required>
+      Human-readable title for the activity.
+    </ParamField>
+    <ParamField body="category" type="string">
+      Activity category.
+    </ParamField>
+    <ParamField body="description" type="string">
+      Detailed description.
+    </ParamField>
+    <ParamField body="status" type="string">
+      Activity status.
+    </ParamField>
+    <ParamField body="priority" type="string">
+      Priority level.
+    </ParamField>
+    <ParamField body="resource_type" type="string">
+      Type of the related resource.
+    </ParamField>
+    <ParamField body="resource_id" type="string">
+      ID of the related resource.
+    </ParamField>
+    <ParamField body="resource_name" type="string">
+      Name of the related resource.
+    </ParamField>
+    <ParamField body="duration_ms" type="number">
+      Duration in milliseconds.
+    </ParamField>
+    <ParamField body="metadata" type="object">
+      Arbitrary metadata.
+    </ParamField>
+    <ParamField body="session_id" type="string">
+      Session identifier for grouping.
+    </ParamField>
+    <ParamField body="user_id" type="string">
+      User ID to attribute the activity to. Defaults to the authenticated user.
+    </ParamField>
+    <ParamField body="is_visible" type="boolean">
+      Whether the activity should be visible in the UI.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<Note>
+  Only admin users (`internal_*` role) and service-role callers can create activities. Standard users receive a `403 FORBIDDEN` error.
+</Note>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "activities",
+  action: "create",
+  data: {
+    activity_type: "genie",
+    action: "created",
+    title: "New genie created: Sales Assistant",
+    resource_type: "agent",
+    resource_id: "agent-uuid",
+    resource_name: "Sales Assistant",
+    metadata: {
+      voice_id: "voice-id",
+    },
+  },
+});
+```
+</CodeGroup>
+
+### Response (status 201)
+
+<ResponseField name="activity" type="Activity">
+  The newly created activity object.
+</ResponseField>
+
+---
+
+## Forbidden actions
+
+The `update` and `delete` actions are not permitted on activities. All callers -- including admin users -- receive a `403 FORBIDDEN` error.
+
+<CodeGroup>
+```typescript Update (forbidden)
+// Returns 403 FORBIDDEN
+const response = await ApiService.invoke({
+  resource: "activities",
+  action: "update",
+  id: "activity-uuid",
+  data: { title: "Updated title" },
+});
+```
+
+```typescript Delete (forbidden)
+// Returns 403 FORBIDDEN
+const response = await ApiService.invoke({
+  resource: "activities",
+  action: "delete",
+  id: "activity-uuid",
+});
+```
+</CodeGroup>
+
+<Warning>
+  Activity records are immutable once created. The `update` and `delete` actions return `403 FORBIDDEN` for all callers, including admins.
+</Warning>

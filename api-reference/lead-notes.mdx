@@ -1,0 +1,389 @@
+---
+title: "Lead notes"
+description: "Manage notes attached to leads with pinning support and full CRUD operations."
+---
+
+All requests use a single endpoint: `POST /functions/v1/api` with `resource: "lead-notes"`.
+
+## Access control
+
+<Note>
+  All operations require authentication. Access is granted if the user owns the lead (via the lead's agent) or is an internal admin. Non-owners receive a `403 Forbidden` response.
+</Note>
+
+---
+
+## List notes
+
+Retrieves all notes for a specific lead. Pinned notes appear first in the results.
+
+<ParamField body="resource" type="string" required>
+  Must be `"lead-notes"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"list"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="leadId" type="number" required>
+      The ID of the lead to retrieve notes for.
+    </ParamField>
+    <ParamField body="limit" type="number">
+      Number of results to return. Range: 1-500. Default: `50`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Pagination offset. Default: `0`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="notes" type="Note[]">
+      Array of note objects. See [note object](#note-object).
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Total number of notes for this lead.
+    </ResponseField>
+    <ResponseField name="limit" type="number" />
+    <ResponseField name="offset" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  notes: LeadNote[];
+  count: number;
+}>({
+  resource: "lead-notes",
+  action: "list",
+  data: {
+    leadId: 123,
+    limit: 20,
+    offset: 0,
+  },
+});
+
+const notes = response?.notes || [];
+```
+</CodeGroup>
+
+---
+
+## Get a note
+
+Retrieves a specific note by ID.
+
+<ParamField body="resource" type="string" required>
+  Must be `"lead-notes"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"get"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The note UUID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="note" type="Note">
+      The note object. See [note object](#note-object).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ note: LeadNote }>({
+  resource: "lead-notes",
+  action: "get",
+  id: "note-uuid-here",
+});
+```
+</CodeGroup>
+
+---
+
+## Create a note
+
+Creates a new note for a lead.
+
+<ParamField body="resource" type="string" required>
+  Must be `"lead-notes"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="leadId" type="number" required>
+      The ID of the lead to attach this note to.
+    </ParamField>
+    <ParamField body="content" type="string" required>
+      The note text.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response (status 201)
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="note" type="Note">
+      The created note object.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ note: LeadNote }>(
+  {
+    resource: "lead-notes",
+    action: "create",
+    data: {
+      leadId: 123,
+      content: "Follow up next week",
+    },
+  },
+  201
+);
+
+const note = response?.note;
+```
+</CodeGroup>
+
+---
+
+## Update a note
+
+Updates an existing note. Only `content` and `is_pinned` fields can be modified.
+
+<ParamField body="resource" type="string" required>
+  Must be `"lead-notes"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"update"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The note UUID.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="content" type="string">
+      Updated note text.
+    </ParamField>
+    <ParamField body="is_pinned" type="boolean">
+      Whether the note should be pinned.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="note" type="Note">
+      The updated note object.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ note: LeadNote }>({
+  resource: "lead-notes",
+  action: "update",
+  id: "note-uuid-here",
+  data: {
+    content: "Updated note content",
+    is_pinned: true,
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Delete a note
+
+Permanently deletes a note.
+
+<ParamField body="resource" type="string" required>
+  Must be `"lead-notes"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"delete"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The note UUID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean" />
+    <ResponseField name="message" type="string" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  success: boolean;
+  message: string;
+}>({
+  resource: "lead-notes",
+  action: "delete",
+  id: "note-uuid-here",
+});
+```
+</CodeGroup>
+
+---
+
+## Toggle pin status
+
+Toggles the pinned status of a note. If the note is pinned it becomes unpinned, and vice versa.
+
+<ParamField body="resource" type="string" required>
+  Must be `"lead-notes"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"togglePin"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The note UUID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="note" type="Note">
+      The note object with the updated `is_pinned` value.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ note: LeadNote }>({
+  resource: "lead-notes",
+  action: "togglePin",
+  id: "note-uuid-here",
+});
+
+const updatedNote = response?.note;
+```
+</CodeGroup>
+
+---
+
+## Get pinned notes
+
+Retrieves all pinned notes for a specific lead.
+
+<ParamField body="resource" type="string" required>
+  Must be `"lead-notes"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"pinned"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="leadId" type="number" required>
+      The ID of the lead.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="notes" type="Note[]">
+      Array of pinned note objects.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ notes: LeadNote[] }>({
+  resource: "lead-notes",
+  action: "pinned",
+  data: {
+    leadId: 123,
+  },
+});
+
+const pinnedNotes = response?.notes || [];
+```
+</CodeGroup>
+
+---
+
+## Note object
+
+<ResponseField name="id" type="string">
+  UUID of the note.
+</ResponseField>
+<ResponseField name="lead_id" type="number">
+  ID of the lead this note belongs to.
+</ResponseField>
+<ResponseField name="user_id" type="string | null">
+  ID of the user who created the note.
+</ResponseField>
+<ResponseField name="content" type="string">
+  The note text.
+</ResponseField>
+<ResponseField name="is_pinned" type="boolean | null">
+  Whether the note is pinned. Pinned notes sort first in list results.
+</ResponseField>
+<ResponseField name="created_at" type="string | null">
+  ISO 8601 timestamp.
+</ResponseField>
+<ResponseField name="updated_at" type="string | null">
+  ISO 8601 timestamp.
+</ResponseField>
+
+---
+
+## Error responses
+
+| Status | Code | Description |
+|--------|------|-------------|
+| 400 | `VALIDATION_ERROR` | Missing required parameters (e.g. `leadId`) |
+| 401 | `UNAUTHORIZED` | Invalid or missing authentication token |
+| 403 | `FORBIDDEN` | User does not own the lead |
+| 404 | `NOT_FOUND` | Note not found |
+| 500 | `INTERNAL_ERROR` | Server error |

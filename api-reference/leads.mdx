@@ -1,0 +1,648 @@
+---
+title: "Leads"
+description: "Manage and query lead records associated with your agents, including filtering, statistics, and admin operations."
+---
+
+All requests use a single endpoint: `POST /functions/v1/api` with `resource: "leads"`.
+
+## Access control
+
+<Note>
+  Regular users can only access leads from agents they own. Internal admins can access all leads using `adminMode: true` and optionally scope to a specific user with `userId`.
+</Note>
+
+---
+
+## Get lead statistics
+
+Retrieves aggregated statistics about leads, including total count and breakdown by status. Aggregation happens at the database level for optimal performance.
+
+<ParamField body="resource" type="string" required>
+  Must be `"leads"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"stats"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="filters" type="object">
+      <Expandable title="properties">
+        <ParamField body="agentId" type="string">
+          Filter by a specific agent ID.
+        </ParamField>
+        <ParamField body="agentIds" type="string[]">
+          Filter by multiple agent IDs.
+        </ParamField>
+        <ParamField body="priority" type="string">
+          Filter by priority (exact match).
+        </ParamField>
+        <ParamField body="searchTerm" type="string">
+          Search in name, email, and phone fields (partial match).
+        </ParamField>
+        <ParamField body="dateRange" type="string">
+          Filter by creation date. One of `"7d"`, `"30d"`, `"90d"`, or `"all"`.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+    <ParamField body="adminMode" type="boolean">
+      Internal admins only. Bypass user scoping to see all leads.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Internal admins only. View statistics for a specific user.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="stats" type="object">
+      <Expandable title="properties">
+        <ResponseField name="total" type="number">
+          Total number of leads matching the filters.
+        </ResponseField>
+        <ResponseField name="by_status" type="object">
+          <Expandable title="properties">
+            <ResponseField name="new" type="number" />
+            <ResponseField name="contacted" type="number" />
+            <ResponseField name="qualified" type="number" />
+            <ResponseField name="converted" type="number" />
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  Leads with a `null` status or a status outside the four standard values are not counted in any `by_status` category but are included in `total`.
+</Note>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  stats: {
+    total: number;
+    by_status: { new: number; contacted: number; qualified: number; converted: number };
+  };
+}>({
+  resource: "leads",
+  action: "stats",
+  data: {
+    filters: {
+      agentIds: ["agent-1", "agent-2"],
+      dateRange: "30d",
+    },
+  },
+});
+```
+
+```json Example response
+{
+  "success": true,
+  "data": {
+    "stats": {
+      "total": 47,
+      "by_status": {
+        "new": 12,
+        "contacted": 18,
+        "qualified": 15,
+        "converted": 2
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## List all leads
+
+Retrieves all leads with full field details and relations.
+
+<ParamField body="resource" type="string" required>
+  Must be `"leads"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"all"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="filters" type="object">
+      <Expandable title="properties">
+        <ParamField body="agentId" type="string">
+          Filter by a specific agent ID.
+        </ParamField>
+        <ParamField body="agentIds" type="string[]">
+          Filter by multiple agent IDs.
+        </ParamField>
+        <ParamField body="status" type="string">
+          Filter by status (exact match).
+        </ParamField>
+        <ParamField body="priority" type="string">
+          Filter by priority (exact match).
+        </ParamField>
+        <ParamField body="searchTerm" type="string">
+          Search in name, email, and phone fields (partial match).
+        </ParamField>
+        <ParamField body="dateRange" type="string">
+          Filter by creation date. One of `"7d"`, `"30d"`, `"90d"`, or `"all"`.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+    <ParamField body="limit" type="number">
+      Number of results to return. Default: `50`, max: `500`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Pagination offset. Default: `0`.
+    </ParamField>
+    <ParamField body="adminMode" type="boolean">
+      Internal admins only. Bypass user scoping.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Internal admins only. View leads for a specific user.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="leads" type="Lead[]">
+      Array of lead objects with all fields. See [lead object](#lead-object) below.
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Total number of leads matching the filters.
+    </ResponseField>
+    <ResponseField name="limit" type="number" />
+    <ResponseField name="offset" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  leads: Lead[];
+  count: number;
+  limit: number;
+  offset: number;
+}>({
+  resource: "leads",
+  action: "all",
+  data: {
+    filters: {
+      agentId: "agent-123",
+      status: "qualified",
+      dateRange: "90d",
+    },
+    limit: 25,
+    offset: 0,
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## List leads (summary)
+
+Retrieves leads with basic fields only, optimized for table views. Accepts the same parameters as `all`.
+
+<ParamField body="resource" type="string" required>
+  Must be `"leads"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"list"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  Same parameters as `all` (filters, pagination, admin options).
+</ParamField>
+
+### Response
+
+Same response structure as `all`, but each lead contains only summary fields:
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="leads" type="object[]">
+      <Expandable title="Lead summary fields">
+        <ResponseField name="id" type="number" />
+        <ResponseField name="agent_id" type="string" />
+        <ResponseField name="user_id" type="string" />
+        <ResponseField name="name" type="string | null" />
+        <ResponseField name="email" type="string | null" />
+        <ResponseField name="phone" type="string | null" />
+        <ResponseField name="status" type="string | null" />
+        <ResponseField name="priority" type="string | null" />
+        <ResponseField name="budget" type="string | null" />
+        <ResponseField name="timeline" type="string | null" />
+        <ResponseField name="assigned_to" type="string | null" />
+        <ResponseField name="created_at" type="string" />
+        <ResponseField name="updated_at" type="string | null" />
+        <ResponseField name="agent" type="object">
+          <Expandable title="properties">
+            <ResponseField name="id" type="string" />
+            <ResponseField name="name" type="string" />
+            <ResponseField name="user_id" type="string" />
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number" />
+    <ResponseField name="limit" type="number" />
+    <ResponseField name="offset" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  leads: Lead[];
+  count: number;
+}>({
+  resource: "leads",
+  action: "list",
+  data: {
+    filters: {
+      searchTerm: "john",
+      priority: "high",
+    },
+    limit: 25,
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Get a lead
+
+Retrieves a specific lead by ID with all fields and relations.
+
+<ParamField body="resource" type="string" required>
+  Must be `"leads"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"get"`
+</ParamField>
+
+<ParamField body="id" type="string | number" required>
+  The lead ID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="lead" type="Lead">
+      Full lead object. See [lead object](#lead-object).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ lead: Lead }>({
+  resource: "leads",
+  action: "get",
+  id: 42,
+});
+```
+</CodeGroup>
+
+---
+
+## Create a lead
+
+Creates a new lead associated with an agent.
+
+<ParamField body="resource" type="string" required>
+  Must be `"leads"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="agent_id" type="string" required>
+      The agent this lead belongs to. Validated against agent ownership.
+    </ParamField>
+    <ParamField body="name" type="string">
+      Lead name.
+    </ParamField>
+    <ParamField body="email" type="string">
+      Lead email address.
+    </ParamField>
+    <ParamField body="phone" type="string">
+      Lead phone number.
+    </ParamField>
+    <ParamField body="status" type="string">
+      Lead status (e.g. `"new"`, `"contacted"`, `"qualified"`, `"converted"`).
+    </ParamField>
+    <ParamField body="priority" type="string">
+      Lead priority level.
+    </ParamField>
+    <ParamField body="budget" type="string">
+      Budget information.
+    </ParamField>
+    <ParamField body="timeline" type="string">
+      Timeline information.
+    </ParamField>
+    <ParamField body="address" type="object">
+      Address data as a JSON object.
+    </ParamField>
+    <ParamField body="notes" type="string">
+      Free-text notes.
+    </ParamField>
+    <ParamField body="assigned_to" type="string">
+      User ID of the assigned team member.
+    </ParamField>
+    <ParamField body="conversation_id" type="number">
+      Link to a conversation record.
+    </ParamField>
+    <ParamField body="primary_lead_id" type="number">
+      Link to a primary lead (for grouping related leads).
+    </ParamField>
+    <ParamField body="is_decision_maker" type="boolean">
+      Whether this lead is a decision maker.
+    </ParamField>
+    <ParamField body="email_consent" type="boolean">
+      Whether the lead has given email consent.
+    </ParamField>
+    <ParamField body="sms_consent" type="boolean">
+      Whether the lead has given SMS consent.
+    </ParamField>
+    <ParamField body="preferred_contact_method" type="string">
+      Preferred method of contact.
+    </ParamField>
+    <ParamField body="preferred_contact_time" type="string">
+      Preferred time for contact.
+    </ParamField>
+    <ParamField body="metadata" type="object">
+      Arbitrary metadata as a JSON object.
+    </ParamField>
+    <ParamField body="user_id" type="string">
+      Override user attribution for this lead.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Create the lead as if this user created it.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response (status 201)
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="lead" type="Lead">
+      The created lead object.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  The `user_id` on the created lead is resolved in this order: (1) provided `user_id` parameter, (2) agent's owning user, (3) current authenticated user.
+</Note>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ lead: Lead }>(
+  {
+    resource: "leads",
+    action: "create",
+    data: {
+      agent_id: "agent-123",
+      name: "Jane Doe",
+      email: "jane@example.com",
+      status: "new",
+      priority: "high",
+    },
+  },
+  201
+);
+```
+</CodeGroup>
+
+---
+
+## Update a lead
+
+Updates an existing lead. This is a partial update -- only include the fields you want to change.
+
+<ParamField body="resource" type="string" required>
+  Must be `"leads"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"update"`
+</ParamField>
+
+<ParamField body="id" type="string | number" required>
+  The lead ID.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  Any combination of lead fields. All fields except `id` and `created_at` can be updated. See the `create` action for the full list of fields.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="lead" type="Lead">
+      The updated lead object.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ lead: Lead }>({
+  resource: "leads",
+  action: "update",
+  id: 42,
+  data: {
+    status: "qualified",
+    priority: "high",
+    notes: "Spoke with decision maker, very interested",
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Delete a lead
+
+Permanently deletes a lead. This is a hard delete with no recovery.
+
+<ParamField body="resource" type="string" required>
+  Must be `"leads"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"delete"`
+</ParamField>
+
+<ParamField body="id" type="string | number" required>
+  The lead ID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean" />
+    <ResponseField name="message" type="string" />
+  </Expandable>
+</ResponseField>
+
+<Warning>
+  This permanently deletes the lead. The user must have access to the lead's agent.
+</Warning>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  success: boolean;
+  message: string;
+}>({
+  resource: "leads",
+  action: "delete",
+  id: 42,
+});
+```
+</CodeGroup>
+
+---
+
+## Lead object
+
+The full lead object returned by `all`, `get`, `create`, and `update` actions.
+
+<ResponseField name="id" type="number" />
+<ResponseField name="agent_id" type="string" />
+<ResponseField name="user_id" type="string" />
+<ResponseField name="name" type="string | null" />
+<ResponseField name="email" type="string | null" />
+<ResponseField name="phone" type="string | null" />
+<ResponseField name="status" type="string | null" />
+<ResponseField name="priority" type="string | null" />
+<ResponseField name="budget" type="string | null" />
+<ResponseField name="timeline" type="string | null" />
+<ResponseField name="address" type="object | null" />
+<ResponseField name="notes" type="string | null" />
+<ResponseField name="assigned_to" type="string | null" />
+<ResponseField name="conversation_id" type="number | null" />
+<ResponseField name="primary_lead_id" type="number | null" />
+<ResponseField name="is_decision_maker" type="boolean | null" />
+<ResponseField name="email_consent" type="boolean | null" />
+<ResponseField name="sms_consent" type="boolean | null" />
+<ResponseField name="preferred_contact_method" type="string | null" />
+<ResponseField name="preferred_contact_time" type="string | null" />
+<ResponseField name="metadata" type="object | null" />
+<ResponseField name="created_at" type="string" />
+<ResponseField name="updated_at" type="string | null" />
+<ResponseField name="agent" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string" />
+    <ResponseField name="name" type="string" />
+    <ResponseField name="user_id" type="string" />
+  </Expandable>
+</ResponseField>
+
+---
+
+## Filtering reference
+
+All list-style actions (`stats`, `all`, `list`) accept a `filters` object with the following fields:
+
+| Filter | Type | Description |
+|--------|------|-------------|
+| `agentId` | `string` | Filter by a single agent |
+| `agentIds` | `string[]` | Filter by multiple agents |
+| `status` | `string` | Exact match on lead status (not available on `stats`) |
+| `priority` | `string` | Exact match on lead priority |
+| `searchTerm` | `string` | Partial match across name, email, and phone |
+| `dateRange` | `string` | One of `"7d"`, `"30d"`, `"90d"`, `"all"` |
+
+---
+
+## Admin operations
+
+<Note>
+  Admin operations require the `internal_admin` role. Regular users receive a `403 Forbidden` response.
+</Note>
+
+### View all leads across all users
+
+```typescript
+const response = await ApiService.invoke<{ leads: Lead[]; count: number }>({
+  resource: "leads",
+  action: "all",
+  data: {
+    adminMode: true,
+  },
+});
+```
+
+### View a specific user's leads
+
+```typescript
+const response = await ApiService.invoke<{ leads: Lead[]; count: number }>({
+  resource: "leads",
+  action: "list",
+  data: {
+    adminMode: true,
+    userId: "user-456",
+  },
+});
+```
+
+### Create a lead as another user
+
+```typescript
+const response = await ApiService.invoke<{ lead: Lead }>(
+  {
+    resource: "leads",
+    action: "create",
+    data: {
+      agent_id: "agent-123",
+      name: "Jane Doe",
+      email: "jane@example.com",
+      userId: "user-456",
+    },
+  },
+  201
+);
+```
+
+---
+
+## Error responses
+
+| Status | Code | Description |
+|--------|------|-------------|
+| 400 | `VALIDATION_ERROR` | Missing or invalid required parameters |
+| 401 | `UNAUTHORIZED` | Invalid or missing authentication token |
+| 403 | `FORBIDDEN` | User does not have access to the agent |
+| 404 | `NOT_FOUND` | Lead not found |
+| 500 | `INTERNAL_ERROR` | Server error |

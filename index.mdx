@@ -1,97 +1,86 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "HelpGenie API"
+description: "Build with the HelpGenie voice AI platform API"
 ---
 
-## Setting up
+The HelpGenie API gives you programmatic access to voice agents, knowledge bases, conversations, leads, and more. All 13 resources are available through a single endpoint using a consistent request and response format.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
+## Get started
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Introduction"
+    icon="book"
+    href="/getting-started/introduction"
   >
-    Edit your docs locally and preview them in real time.
+    Learn about the API architecture, the resource/action pattern, and available resources.
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Authentication"
+    icon="lock"
+    href="/getting-started/authentication"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Obtain a Bearer token from Supabase Auth and authenticate your requests.
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
+    title="Making requests"
     icon="code"
-    href="/essentials/code"
+    href="/getting-started/making-requests"
   >
-    Add sample code to demonstrate how to use your product.
+    Understand request structure, response envelopes, and common patterns.
   </Card>
   <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
+    title="Error handling"
+    icon="triangle-exclamation"
+    href="/getting-started/errors"
   >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+    Handle errors with standardized error codes and response formats.
   </Card>
 </Columns>
 
-## Need inspiration?
+## API reference
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Columns cols={3}>
+  <Card
+    title="Agents"
+    icon="robot"
+    href="/api-reference/genies"
+  >
+    Create and manage voice agents (genies), groups, and conversations.
+  </Card>
+  <Card
+    title="Knowledge"
+    icon="book-open"
+    href="/api-reference/knowledge-base"
+  >
+    Manage documents and organize them into folders for your agents.
+  </Card>
+  <Card
+    title="Voice"
+    icon="microphone"
+    href="/api-reference/voices"
+  >
+    Browse voices, manage favorites, and organize voice collections.
+  </Card>
+  <Card
+    title="CRM"
+    icon="address-book"
+    href="/api-reference/leads"
+  >
+    Track leads captured by your agents and attach notes.
+  </Card>
+  <Card
+    title="Marketplace"
+    icon="store"
+    href="/api-reference/marketplace"
+  >
+    Browse and manage marketplace agent templates.
+  </Card>
+  <Card
+    title="Platform"
+    icon="gear"
+    href="/api-reference/profiles"
+  >
+    Manage user profiles, teams, and activity logs.
+  </Card>
+</Columns>

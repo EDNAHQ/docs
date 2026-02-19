@@ -1,0 +1,339 @@
+---
+title: "Conversations"
+description: "List, retrieve, sync, analyze, update, and delete conversation records"
+---
+
+## List conversations
+
+Retrieves a paginated list of conversations. Standard users see only conversations belonging to their own genies. Admin users see all conversations.
+
+<ParamField body="resource" type="string" required>
+  `conversations`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `all`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="agentId" type="string">
+      Filter conversations to a specific genie. When omitted, returns conversations for all genies the user owns.
+    </ParamField>
+    <ParamField body="limit" type="number">
+      Maximum number of records to return. Defaults to `50`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Number of records to skip for pagination. Defaults to `0`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "conversations",
+  action: "all",
+  data: {
+    agentId: "agent-uuid",
+    limit: 20,
+    offset: 0,
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="conversations" type="Conversation[]">
+  Array of conversation objects, each joined with basic genie info.
+  <Expandable title="Conversation object">
+    <ResponseField name="id" type="number">
+      Unique conversation identifier.
+    </ResponseField>
+    <ResponseField name="agent_id" type="string | null">
+      ID of the genie this conversation belongs to.
+    </ResponseField>
+    <ResponseField name="el_agent_id" type="string | null">
+      ElevenLabs agent ID.
+    </ResponseField>
+    <ResponseField name="elevenlabs_id" type="string | null">
+      ElevenLabs conversation ID.
+    </ResponseField>
+    <ResponseField name="user_id" type="string | null">
+      ID of the user who owns the genie.
+    </ResponseField>
+    <ResponseField name="status" type="string | null">
+      Conversation status.
+    </ResponseField>
+    <ResponseField name="type" type="string | null">
+      Conversation type.
+    </ResponseField>
+    <ResponseField name="metadata" type="object | null">
+      Arbitrary metadata associated with the conversation.
+    </ResponseField>
+    <ResponseField name="viewed" type="boolean">
+      Whether the conversation has been viewed.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the conversation was created.
+    </ResponseField>
+    <ResponseField name="agents" type="object | null">
+      Joined genie data.
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">
+          Genie ID.
+        </ResponseField>
+        <ResponseField name="name" type="string">
+          Genie name.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="count" type="number">
+  Estimated total number of matching conversations.
+</ResponseField>
+
+<ResponseField name="limit" type="number">
+  The limit that was applied.
+</ResponseField>
+
+<ResponseField name="offset" type="number">
+  The offset that was applied.
+</ResponseField>
+
+---
+
+## Get conversation
+
+Retrieves a single conversation by ID. Standard users can only access conversations for their own genies.
+
+<ParamField body="resource" type="string" required>
+  `conversations`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `get`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The conversation ID.
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "conversations",
+  action: "get",
+  id: "123",
+});
+```
+</CodeGroup>
+
+### Response
+
+Returns the full conversation object directly in `data`.
+
+<ResponseField name="id" type="number">
+  Unique conversation identifier.
+</ResponseField>
+
+<ResponseField name="agent_id" type="string | null">
+  ID of the genie this conversation belongs to.
+</ResponseField>
+
+<ResponseField name="elevenlabs_id" type="string | null">
+  ElevenLabs conversation ID.
+</ResponseField>
+
+<ResponseField name="status" type="string | null">
+  Conversation status.
+</ResponseField>
+
+<ResponseField name="metadata" type="object | null">
+  Arbitrary metadata associated with the conversation.
+</ResponseField>
+
+<ResponseField name="viewed" type="boolean">
+  Whether the conversation has been viewed.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp.
+</ResponseField>
+
+---
+
+## Sync conversations
+
+Triggers a sync of conversations from ElevenLabs for a specific genie. This delegates to the `handle-conversation` edge function.
+
+<ParamField body="resource" type="string" required>
+  `conversations`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `sync`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="agentId" type="string" required>
+      The genie ID to sync conversations for. The user must own this genie.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "conversations",
+  action: "sync",
+  data: {
+    agentId: "agent-uuid",
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+Returns the result from the `handle-conversation` edge function. The shape depends on the sync outcome.
+
+<Note>
+  The authenticated user must own the genie specified by `agentId`. A `403 FORBIDDEN` error is returned otherwise.
+</Note>
+
+---
+
+## Analyze conversation
+
+Runs an analysis on a specific conversation. This delegates to the `handle-conversation` edge function.
+
+<ParamField body="resource" type="string" required>
+  `conversations`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `analyze`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The conversation ID to analyze.
+</ParamField>
+
+<ParamField body="data" type="object">
+  Additional parameters to pass to the analysis function.
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "conversations",
+  action: "analyze",
+  id: "123",
+  data: {
+    // optional analysis parameters
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+Returns the analysis result from the `handle-conversation` edge function. The shape depends on the analysis type.
+
+---
+
+## Update conversation
+
+Updates metadata or fields on an existing conversation. Standard users can only update their own conversations.
+
+<ParamField body="resource" type="string" required>
+  `conversations`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `update`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The conversation ID to update.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  Fields to update. Can be provided directly or nested under an `updates` key.
+  <Expandable title="properties">
+    <ParamField body="status" type="string">
+      Updated conversation status.
+    </ParamField>
+    <ParamField body="metadata" type="object">
+      Updated metadata object.
+    </ParamField>
+    <ParamField body="viewed" type="boolean">
+      Mark conversation as viewed or unviewed.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "conversations",
+  action: "update",
+  id: "123",
+  data: {
+    viewed: true,
+    metadata: { notes: "Follow up required" },
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+Returns the updated conversation object directly in `data`.
+
+---
+
+## Delete conversation
+
+Permanently deletes a conversation. Standard users can only delete their own conversations. Admin users can delete any conversation.
+
+<ParamField body="resource" type="string" required>
+  `conversations`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `delete`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The conversation ID to delete.
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "conversations",
+  action: "delete",
+  id: "123",
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  `true` if the conversation was deleted.
+</ResponseField>
+
+<ResponseField name="id" type="string">
+  The ID of the deleted conversation.
+</ResponseField>
+
+<Warning>
+  This action is permanent and cannot be undone.
+</Warning>

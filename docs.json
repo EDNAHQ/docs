@@ -1,48 +1,27 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "HelpGenie",
+  "description": "API documentation for the HelpGenie voice AI platform",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#4E9CFF",
+    "light": "#7BB8FF",
+    "dark": "#2B7FE8"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Getting started",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Overview",
             "pages": [
               "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "getting-started/introduction",
+              "getting-started/authentication",
+              "getting-started/making-requests",
+              "getting-started/errors"
             ]
           }
         ]
@@ -51,18 +30,48 @@
         "tab": "API reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
+            "pages": ["api-reference/introduction"]
+          },
+          {
+            "group": "Agents",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/genies",
+              "api-reference/genie-groups",
+              "api-reference/conversations"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Knowledge",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/knowledge-base",
+              "api-reference/document-folders"
+            ]
+          },
+          {
+            "group": "Voice",
+            "pages": [
+              "api-reference/voices",
+              "api-reference/voice-collections"
+            ]
+          },
+          {
+            "group": "CRM",
+            "pages": [
+              "api-reference/leads",
+              "api-reference/lead-notes"
+            ]
+          },
+          {
+            "group": "Marketplace",
+            "pages": ["api-reference/marketplace"]
+          },
+          {
+            "group": "Platform",
+            "pages": [
+              "api-reference/profiles",
+              "api-reference/teams",
+              "api-reference/activities"
             ]
           }
         ]
@@ -71,14 +80,9 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "App",
+          "href": "https://helpgenie.ai",
+          "icon": "browser"
         }
       ]
     }
@@ -91,32 +95,18 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@helpgenie.ai"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://helpgenie.ai/auth"
     }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "linkedin": "https://linkedin.com/company/helpgenie"
     }
   }
 }

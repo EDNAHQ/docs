@@ -1,0 +1,504 @@
+---
+title: "Teams"
+description: "Manage teams, team membership, and invitations."
+---
+
+All requests use a single endpoint: `POST /functions/v1/api` with `resource: "teams"`.
+
+## Access control
+
+<Note>
+  Access varies by action. Team owners and internal admins have full access to all actions. Team members have read-only access to `get` and `members`. Any authenticated user can create a team.
+</Note>
+
+| Action | Any user | Team member | Team owner | Admin |
+|--------|----------|-------------|------------|-------|
+| `get` | No | Yes (read-only) | Yes | Yes |
+| `create` | Yes | -- | -- | Yes |
+| `update` | No | No | Yes | Yes |
+| `delete` | No | No | Yes | Yes |
+| `members` | No | Yes | Yes | Yes |
+| `invite` | No | No | Yes | Yes |
+| `invitations` | No | No | Yes | Yes |
+| `cancel-invite` | No | No | Yes | Yes |
+| `remove-member` | No | No | Yes | Yes |
+
+---
+
+## Get a team
+
+Retrieves a specific team by ID with all team members.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"get"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The team ID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="team" type="object">
+      <Expandable title="properties">
+        <ResponseField name="id" type="number" />
+        <ResponseField name="name" type="string" />
+        <ResponseField name="brand" type="string" />
+        <ResponseField name="branding" type="object" />
+        <ResponseField name="owner_id" type="string" />
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="members" type="object[]">
+      <Expandable title="properties">
+        <ResponseField name="id" type="string" />
+        <ResponseField name="full_name" type="string" />
+        <ResponseField name="email" type="string" />
+        <ResponseField name="avatar_url" type="string" />
+        <ResponseField name="role" type="string">
+          Either `"Owner"` or `"Member"`.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  team: Team;
+  members: TeamMember[];
+}>({
+  resource: "teams",
+  action: "get",
+  id: "123",
+});
+```
+</CodeGroup>
+
+---
+
+## Create a team
+
+Creates a new team. The authenticated user automatically becomes the team owner.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="name" type="string" required>
+      Team name.
+    </ParamField>
+    <ParamField body="brand" type="string" required>
+      Team brand name.
+    </ParamField>
+    <ParamField body="branding" type="object">
+      Branding configuration (e.g. colors, logos).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response (status 201)
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="team" type="object">
+      The newly created team object.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ team: Team }>(
+  {
+    resource: "teams",
+    action: "create",
+    data: {
+      name: "Marketing Team",
+      brand: "ACME Corp",
+      branding: { color: "#FF0000" },
+    },
+  },
+  201
+);
+```
+</CodeGroup>
+
+---
+
+## Update a team
+
+Updates team settings such as name, brand, and branding.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"update"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The team ID.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="name" type="string">
+      Updated team name.
+    </ParamField>
+    <ParamField body="brand" type="string">
+      Updated brand name.
+    </ParamField>
+    <ParamField body="branding" type="object">
+      Updated branding configuration.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="team" type="object">
+      The updated team object.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ team: Team }>({
+  resource: "teams",
+  action: "update",
+  id: "123",
+  data: {
+    name: "Updated Team Name",
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Delete a team
+
+Permanently deletes a team and removes all members.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"delete"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The team ID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean" />
+    <ResponseField name="message" type="string">
+      Deletion result description.
+    </ResponseField>
+    <ResponseField name="errors" type="string[]">
+      Array of any cleanup errors, if applicable.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Warning>
+  This permanently deletes the team and removes all member associations.
+</Warning>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  success: boolean;
+  message: string;
+}>({
+  resource: "teams",
+  action: "delete",
+  id: "123",
+});
+```
+</CodeGroup>
+
+---
+
+## List team members
+
+Retrieves all members of a team.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"members"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The team ID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="members" type="object[]">
+      <Expandable title="properties">
+        <ResponseField name="id" type="string" />
+        <ResponseField name="full_name" type="string" />
+        <ResponseField name="email" type="string" />
+        <ResponseField name="avatar_url" type="string" />
+        <ResponseField name="role" type="string">
+          Either `"Owner"` or `"Member"`.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Total number of members.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  members: TeamMember[];
+  count: number;
+}>({
+  resource: "teams",
+  action: "members",
+  id: "123",
+});
+```
+</CodeGroup>
+
+---
+
+## Invite a member
+
+Sends a team invitation to an email address.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"invite"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The team ID.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="email" type="string" required>
+      Email address of the person to invite.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response (status 201)
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="invitation" type="object">
+      The pending invitation object.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ invitation: TeamInvitation }>(
+  {
+    resource: "teams",
+    action: "invite",
+    id: "123",
+    data: {
+      email: "user@example.com",
+    },
+  },
+  201
+);
+```
+</CodeGroup>
+
+---
+
+## List pending invitations
+
+Retrieves all pending invitations for a team.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"invitations"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The team ID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="invitations" type="object[]">
+      Array of pending invitation objects.
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Number of pending invitations.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  invitations: TeamInvitation[];
+  count: number;
+}>({
+  resource: "teams",
+  action: "invitations",
+  id: "123",
+});
+```
+</CodeGroup>
+
+---
+
+## Cancel an invitation
+
+Cancels a pending team invitation.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"cancel-invite"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The invitation UUID.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="teamId" type="number" required>
+      The team ID the invitation belongs to.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ success: boolean }>({
+  resource: "teams",
+  action: "cancel-invite",
+  id: "invitation-uuid",
+  data: {
+    teamId: 123,
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Remove a member
+
+Removes a member from a team.
+
+<ParamField body="resource" type="string" required>
+  Must be `"teams"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"remove-member"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The team ID.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="memberId" type="string" required>
+      The user UUID of the member to remove.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ success: boolean }>({
+  resource: "teams",
+  action: "remove-member",
+  id: "123",
+  data: {
+    memberId: "user-uuid",
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Error responses
+
+| Status | Code | Description |
+|--------|------|-------------|
+| 400 | `VALIDATION_ERROR` | Missing or invalid required parameters |
+| 401 | `UNAUTHORIZED` | No valid authentication token |
+| 403 | `FORBIDDEN` | User lacks permission for the operation |
+| 404 | `NOT_FOUND` | Team or resource not found |
+| 500 | `INTERNAL_ERROR` | Server error during processing |

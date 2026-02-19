@@ -1,0 +1,591 @@
+---
+title: "Marketplace"
+description: "Browse, search, and manage marketplace genie listings with categories and statistics."
+---
+
+All requests use a single endpoint: `POST /functions/v1/api` with `resource: "marketplace"`.
+
+## Access control
+
+<Note>
+  The `list`, `all`, `get`, `categories`, and `stats` actions are publicly accessible. The `create`, `update`, and `delete` actions require internal admin authentication.
+</Note>
+
+---
+
+## List genies (slim)
+
+Retrieves a simplified list of marketplace genies optimized for dropdowns and compact listings. Returns only essential fields without nested relations.
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"list"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number">
+      Items per page. Range: 1-500. Default: `20`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Pagination offset. Default: `0`.
+    </ParamField>
+    <ParamField body="query" type="object">
+      <Expandable title="properties">
+        <ParamField body="category" type="string">
+          Filter by category slug.
+        </ParamField>
+        <ParamField body="brand" type="string">
+          Filter by brand slug.
+        </ParamField>
+        <ParamField body="search" type="string">
+          Search in name, tagline, and description.
+        </ParamField>
+        <ParamField body="featured" type="string">
+          Set to `"true"` to show only featured genies.
+        </ParamField>
+        <ParamField body="minRating" type="string">
+          Minimum rating filter.
+        </ParamField>
+        <ParamField body="difficulty" type="string">
+          Filter by difficulty metadata.
+        </ParamField>
+        <ParamField body="industry" type="string">
+          Filter by industry metadata.
+        </ParamField>
+        <ParamField body="sortBy" type="string">
+          Sort order. One of `"popular"`, `"newest"`, `"rating"`, `"clones"`. Default: `"newest"`.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="genies" type="object[]">
+      <Expandable title="Slim genie fields">
+        <ResponseField name="id" type="string" />
+        <ResponseField name="slug" type="string" />
+        <ResponseField name="display_name" type="string" />
+        <ResponseField name="tagline" type="string" />
+        <ResponseField name="thumbnail_url" type="string" />
+        <ResponseField name="rating" type="number" />
+        <ResponseField name="category_id" type="string" />
+        <ResponseField name="is_featured" type="boolean" />
+        <ResponseField name="clone_count" type="number" />
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number" />
+    <ResponseField name="limit" type="number" />
+    <ResponseField name="offset" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  genies: MarketplaceGenie[];
+  count: number;
+}>({
+  resource: "marketplace",
+  action: "list",
+  data: {
+    limit: 20,
+    query: {
+      category: "customer-service",
+      sortBy: "popular",
+    },
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## List genies (complete)
+
+Retrieves the full marketplace genie listing with all fields and nested relations (category, brand, and creator in admin mode).
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"all"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number">
+      Items per page. Range: 1-500. Default: `20`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Pagination offset. Default: `0`.
+    </ParamField>
+    <ParamField body="adminMode" type="boolean">
+      Admin only. Include non-public genies in results.
+    </ParamField>
+    <ParamField body="query" type="object">
+      Same query parameters as the `list` action. Default sort: featured first, then by clones.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="genies" type="object[]">
+      Array of full genie objects. See [genie object](#genie-object).
+    </ResponseField>
+    <ResponseField name="count" type="number" />
+    <ResponseField name="limit" type="number" />
+    <ResponseField name="offset" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  genies: MarketplaceGenie[];
+  count: number;
+}>({
+  resource: "marketplace",
+  action: "all",
+  data: {
+    limit: 50,
+    query: {
+      search: "sales",
+      minRating: "4",
+    },
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Get a genie
+
+Retrieves a specific marketplace genie by slug or ID. Automatically increments the view count and includes related genies from the same category.
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"get"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The genie slug (preferred) or UUID.
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="adminMode" type="boolean">
+      Admin only. Allow fetching non-public genies.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  All fields from the [genie object](#genie-object), plus:
+  <Expandable title="additional fields">
+    <ResponseField name="related_genies" type="object[]">
+      Genies from the same category.
+      <Expandable title="properties">
+        <ResponseField name="id" type="string" />
+        <ResponseField name="slug" type="string" />
+        <ResponseField name="display_name" type="string" />
+        <ResponseField name="tagline" type="string" />
+        <ResponseField name="thumbnail_url" type="string" />
+        <ResponseField name="rating" type="number" />
+        <ResponseField name="category_id" type="string" />
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<MarketplaceGenie>({
+  resource: "marketplace",
+  action: "get",
+  id: "sales-assistant",
+});
+```
+</CodeGroup>
+
+---
+
+## Create a listing
+
+Creates a new marketplace listing. Automatically marks the agent as a marketplace template and links the listing back to the agent.
+
+<Note>
+  Only internal admins can create marketplace listings.
+</Note>
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="agent_id" type="string" required>
+      ID of the agent to list on the marketplace.
+    </ParamField>
+    <ParamField body="slug" type="string" required>
+      URL-friendly unique identifier.
+    </ParamField>
+    <ParamField body="display_name" type="string" required>
+      Public display name.
+    </ParamField>
+    <ParamField body="category_id" type="string" required>
+      Category ID for the listing.
+    </ParamField>
+    <ParamField body="tagline" type="string">
+      Short one-liner description.
+    </ParamField>
+    <ParamField body="description" type="string">
+      Full description.
+    </ParamField>
+    <ParamField body="brand_id" type="string">
+      Associated brand ID.
+    </ParamField>
+    <ParamField body="is_featured" type="boolean">
+      Feature on homepage. Default: `false`.
+    </ParamField>
+    <ParamField body="is_public" type="boolean">
+      Publish to marketplace. Default: `true`.
+    </ParamField>
+    <ParamField body="thumbnail_url" type="string">
+      Preview image URL.
+    </ParamField>
+    <ParamField body="demo_video_url" type="string">
+      Demo video URL.
+    </ParamField>
+    <ParamField body="metadata" type="object">
+      Additional metadata (e.g. `difficulty`, `industry`).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response (status 201)
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  The created marketplace genie with all fields. See [genie object](#genie-object).
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<MarketplaceGenie>(
+  {
+    resource: "marketplace",
+    action: "create",
+    data: {
+      agent_id: "agent-123",
+      slug: "sales-assistant",
+      display_name: "Sales Assistant",
+      category_id: "category-456",
+      tagline: "Close more deals with voice AI",
+      is_featured: true,
+      metadata: { difficulty: "beginner", industry: "sales" },
+    },
+  },
+  201
+);
+```
+</CodeGroup>
+
+---
+
+## Update a listing
+
+Updates an existing marketplace listing.
+
+<Note>
+  Only internal admins can update marketplace listings.
+</Note>
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"update"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The listing ID.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="display_name" type="string" />
+    <ParamField body="tagline" type="string" />
+    <ParamField body="description" type="string" />
+    <ParamField body="category_id" type="string" />
+    <ParamField body="brand_id" type="string" />
+    <ParamField body="is_featured" type="boolean" />
+    <ParamField body="is_public" type="boolean" />
+    <ParamField body="thumbnail_url" type="string" />
+    <ParamField body="demo_video_url" type="string" />
+    <ParamField body="metadata" type="object" />
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  The updated marketplace genie with all fields.
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<MarketplaceGenie>({
+  resource: "marketplace",
+  action: "update",
+  id: "genie-uuid",
+  data: {
+    display_name: "Updated Sales Assistant",
+    is_featured: false,
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Delete a listing
+
+Permanently deletes a marketplace listing and unlinks the agent from the marketplace.
+
+<Note>
+  Only internal admins can delete marketplace listings.
+</Note>
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"delete"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The listing ID.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean" />
+    <ResponseField name="id" type="string">
+      The deleted listing ID.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  success: boolean;
+  id: string;
+}>({
+  resource: "marketplace",
+  action: "delete",
+  id: "genie-uuid",
+});
+```
+</CodeGroup>
+
+---
+
+## List categories
+
+Retrieves all marketplace categories ordered by display order. No authentication required.
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"categories"`
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="categories" type="object[]">
+      <Expandable title="properties">
+        <ResponseField name="id" type="string" />
+        <ResponseField name="name" type="string" />
+        <ResponseField name="slug" type="string" />
+        <ResponseField name="description" type="string" />
+        <ResponseField name="icon" type="string" />
+        <ResponseField name="order" type="number" />
+        <ResponseField name="parent_id" type="string | null" />
+        <ResponseField name="created_at" type="string" />
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  categories: MarketplaceCategory[];
+  count: number;
+}>({
+  resource: "marketplace",
+  action: "categories",
+});
+```
+</CodeGroup>
+
+---
+
+## Get statistics
+
+Retrieves aggregate statistics about the marketplace. No authentication required.
+
+<ParamField body="resource" type="string" required>
+  Must be `"marketplace"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"stats"`
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="total_genies" type="number">
+      Total number of marketplace genies.
+    </ResponseField>
+    <ResponseField name="total_views" type="number">
+      Combined view count across all genies.
+    </ResponseField>
+    <ResponseField name="total_clones" type="number">
+      Combined clone count across all genies.
+    </ResponseField>
+    <ResponseField name="featured_count" type="number">
+      Number of featured genies.
+    </ResponseField>
+    <ResponseField name="categories_count" type="number">
+      Number of categories.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  total_genies: number;
+  total_views: number;
+  total_clones: number;
+  featured_count: number;
+  categories_count: number;
+}>({
+  resource: "marketplace",
+  action: "stats",
+});
+```
+
+```json Example response
+{
+  "success": true,
+  "data": {
+    "total_genies": 42,
+    "total_views": 5420,
+    "total_clones": 128,
+    "featured_count": 8,
+    "categories_count": 12
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Genie object
+
+The full genie object returned by `all`, `get`, `create`, and `update` actions.
+
+<ResponseField name="id" type="string" />
+<ResponseField name="agent_id" type="string" />
+<ResponseField name="slug" type="string" />
+<ResponseField name="display_name" type="string" />
+<ResponseField name="tagline" type="string" />
+<ResponseField name="description" type="string" />
+<ResponseField name="category_id" type="string" />
+<ResponseField name="category" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string" />
+    <ResponseField name="name" type="string" />
+    <ResponseField name="slug" type="string" />
+  </Expandable>
+</ResponseField>
+<ResponseField name="brand_id" type="string" />
+<ResponseField name="brand" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string" />
+    <ResponseField name="name" type="string" />
+    <ResponseField name="slug" type="string" />
+  </Expandable>
+</ResponseField>
+<ResponseField name="is_featured" type="boolean" />
+<ResponseField name="is_public" type="boolean" />
+<ResponseField name="thumbnail_url" type="string" />
+<ResponseField name="demo_video_url" type="string" />
+<ResponseField name="rating" type="number" />
+<ResponseField name="view_count" type="number" />
+<ResponseField name="clone_count" type="number" />
+<ResponseField name="metadata" type="object" />
+<ResponseField name="created_at" type="string" />
+<ResponseField name="updated_at" type="string" />
+<ResponseField name="creator" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string" />
+    <ResponseField name="full_name" type="string" />
+    <ResponseField name="email" type="string" />
+  </Expandable>
+</ResponseField>
+
+---
+
+## Error responses
+
+| Status | Code | Description |
+|--------|------|-------------|
+| 400 | `VALIDATION_ERROR` | Missing required parameters |
+| 401 | `UNAUTHORIZED` | Missing or invalid authentication token |
+| 403 | `FORBIDDEN` | Non-admin attempting a write operation |
+| 404 | `NOT_FOUND` | Marketplace genie not found |
+| 500 | `INTERNAL_ERROR` | Server error |

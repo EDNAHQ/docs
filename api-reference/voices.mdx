@@ -1,0 +1,310 @@
+---
+title: "Voices"
+description: "Manage favorite voices, browse popular and recent voices, and track voice usage"
+---
+
+## List favorite voices
+
+Retrieves all voices that the authenticated user has added to their favorites.
+
+<ParamField body="resource" type="string" required>
+  `voices`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `favorites`
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voices",
+  action: "favorites",
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="favorites" type="VoiceFavorite[]">
+  Array of favorited voice records.
+  <Expandable title="VoiceFavorite object">
+    <ResponseField name="id" type="string">
+      Unique favorite record identifier.
+    </ResponseField>
+    <ResponseField name="user_id" type="string">
+      ID of the user who favorited the voice.
+    </ResponseField>
+    <ResponseField name="voice_id" type="string">
+      The external voice identifier.
+    </ResponseField>
+    <ResponseField name="voice_data" type="object">
+      Voice metadata stored at the time of favoriting.
+    </ResponseField>
+    <ResponseField name="favorited_at" type="string | null">
+      ISO 8601 timestamp of when the voice was favorited.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="count" type="number">
+  Total number of favorited voices.
+</ResponseField>
+
+---
+
+## Get popular voices
+
+Retrieves the most frequently used voices across all users.
+
+<ParamField body="resource" type="string" required>
+  `voices`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `popular`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number">
+      Maximum number of voices to return. Defaults to `50`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<Note>
+  Authentication is optional for this action. Popular voice data is publicly accessible.
+</Note>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voices",
+  action: "popular",
+  data: {
+    limit: 10,
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="voices" type="PopularVoice[]">
+  Array of popular voice records, ordered by usage count.
+  <Expandable title="PopularVoice object">
+    <ResponseField name="voice_id" type="string">
+      The external voice identifier.
+    </ResponseField>
+    <ResponseField name="usage_count" type="number">
+      Total number of times the voice has been used.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="count" type="number">
+  Total number of voices returned.
+</ResponseField>
+
+---
+
+## Get recent voices
+
+Retrieves voices recently used by the authenticated user.
+
+<ParamField body="resource" type="string" required>
+  `voices`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `recent`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number">
+      Maximum number of voices to return. Defaults to `10`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voices",
+  action: "recent",
+  data: {
+    limit: 5,
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="voices" type="RecentVoice[]">
+  Array of recently used voice records, ordered by most recent first.
+  <Expandable title="RecentVoice object">
+    <ResponseField name="voice_id" type="string">
+      The external voice identifier.
+    </ResponseField>
+    <ResponseField name="last_used" type="string">
+      ISO 8601 timestamp of when the voice was last used.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="count" type="number">
+  Total number of voices returned.
+</ResponseField>
+
+---
+
+## Add favorite voice
+
+Adds a voice to the authenticated user's favorites. If the voice is already favorited, returns the existing record without creating a duplicate.
+
+<ParamField body="resource" type="string" required>
+  `voices`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `add-favorite`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The voice ID to add to favorites.
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="voice_data" type="object">
+      Voice metadata to store with the favorite record (name, language, accent, etc.).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voices",
+  action: "add-favorite",
+  id: "voice-id",
+  data: {
+    voice_data: {
+      name: "Rachel",
+      language: "en",
+      accent: "American",
+    },
+  },
+});
+```
+</CodeGroup>
+
+### Response (status 201)
+
+<ResponseField name="favorite" type="VoiceFavorite">
+  The newly created favorite record. See the [VoiceFavorite object](#list-favorite-voices) for field details.
+</ResponseField>
+
+If the voice is already favorited, the response returns:
+
+<ResponseField name="already_favorited" type="boolean">
+  `true` when the voice was already in favorites.
+</ResponseField>
+
+<ResponseField name="voice_id" type="string">
+  The voice ID that was already favorited.
+</ResponseField>
+
+---
+
+## Remove favorite voice
+
+Removes a voice from the authenticated user's favorites.
+
+<ParamField body="resource" type="string" required>
+  `voices`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `remove-favorite`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The voice ID to remove from favorites.
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voices",
+  action: "remove-favorite",
+  id: "voice-id",
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  `true` if the voice was successfully removed from favorites.
+</ResponseField>
+
+<ResponseField name="voice_id" type="string">
+  The voice ID that was removed.
+</ResponseField>
+
+---
+
+## Track voice usage
+
+Records that a voice was used. This is a fire-and-forget operation; errors are logged server-side but do not cause the request to fail.
+
+<ParamField body="resource" type="string" required>
+  `voices`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `track-usage`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The voice ID to track usage for.
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="context" type="string">
+      The context in which the voice was used. One of `preview`, `select`, or `agent_creation`.
+    </ParamField>
+    <ParamField body="agentId" type="string">
+      The genie ID, if the usage is related to genie creation or configuration.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<Note>
+  Authentication is optional. Anonymous usage is tracked when no token is provided.
+</Note>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voices",
+  action: "track-usage",
+  id: "voice-id",
+  data: {
+    context: "agent_creation",
+    agentId: "agent-uuid",
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Always returns `true`, regardless of whether the tracking write succeeded internally.
+</ResponseField>

@@ -1,0 +1,256 @@
+---
+title: "Making requests"
+description: "Learn how to structure API requests, understand response formats, and use common patterns"
+---
+
+## Request methods
+
+The HelpGenie API supports two ways to make requests: the `ApiService.invoke()` pattern (recommended for TypeScript projects) and direct HTTP requests.
+
+### ApiService.invoke() (recommended)
+
+The `ApiService` class handles authentication, request formatting, and response unwrapping automatically:
+
+```typescript
+import { ApiService } from "@/services/api/ApiService";
+
+const genies = await ApiService.invoke({
+  resource: "genies",
+  action: "all",
+});
+```
+
+The `invoke` method accepts an options object with these fields:
+
+<ParamField body="resource" type="string" required>
+  The API resource to target. Must be one of the 13 supported resources.
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  The action to perform. Common actions: `all`, `list`, `get`, `create`, `update`, `delete`.
+</ParamField>
+
+<ParamField body="id" type="string | number">
+  The record identifier. Required for `get`, `update`, and `delete` actions.
+</ParamField>
+
+<ParamField body="data" type="object">
+  The request payload. Used with `create` and `update` actions. Structure varies by resource.
+</ParamField>
+
+### Direct HTTP requests
+
+You can also call the Edge Function directly. The API accepts both a body-based resource/action pattern and standard REST-style HTTP methods.
+
+<Tabs>
+  <Tab title="Body-based (POST)">
+    Send the resource, action, and data in the request body:
+
+    ```bash
+    curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+      -H "Authorization: Bearer <token>" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "resource": "genies",
+        "action": "get",
+        "id": "abc-123"
+      }'
+    ```
+  </Tab>
+  <Tab title="REST-style">
+    Use HTTP methods and URL paths:
+
+    ```bash
+    # GET all genies
+    GET /functions/v1/api/genies
+
+    # GET a single genie
+    GET /functions/v1/api/genies/abc-123
+
+    # GET list (compact format)
+    GET /functions/v1/api/genies/list
+
+    # CREATE a genie
+    POST /functions/v1/api/genies
+
+    # UPDATE a genie
+    PATCH /functions/v1/api/genies/abc-123
+
+    # DELETE a genie
+    DELETE /functions/v1/api/genies/abc-123
+    ```
+  </Tab>
+</Tabs>
+
+## Common actions
+
+Most resources support a standard set of actions. Some resources add custom actions specific to their domain.
+
+| Action | Description | Requires `id` | Requires `data` |
+| --- | --- | --- | --- |
+| `all` | Fetch all records with full details and relations | No | No |
+| `list` | Fetch a compact list of records (for dropdowns and selectors) | No | No |
+| `get` | Fetch a single record by ID | Yes | No |
+| `create` | Create a new record | No | Yes |
+| `update` | Update an existing record | Yes | Yes |
+| `delete` | Delete a record | Yes | No |
+
+### `list` vs `all`
+
+The API distinguishes between two fetching actions:
+
+- **`all`** returns full records with related data (joins, counts, nested objects). Use this when you need complete information.
+- **`list`** returns minimal records with only key fields (typically `id` and `name`). Use this for populating dropdowns, selectors, or anywhere you need a lightweight list.
+
+```typescript
+// Full records with all relations — use for detail views
+const allGenies = await ApiService.invoke({
+  resource: "genies",
+  action: "all",
+});
+
+// Compact records — use for dropdowns and selectors
+const genieList = await ApiService.invoke({
+  resource: "genies",
+  action: "list",
+});
+```
+
+## Request examples
+
+### Create a resource
+
+```typescript
+const newGenie = await ApiService.invoke({
+  resource: "genies",
+  action: "create",
+  data: {
+    genieName: "Support Agent",
+    voiceId: "voice-abc-123",
+    firstMessage: "Hi, how can I help you today?",
+  },
+});
+```
+
+### Get a single resource
+
+```typescript
+const genie = await ApiService.invoke({
+  resource: "genies",
+  action: "get",
+  id: "abc-123",
+});
+```
+
+### Update a resource
+
+```typescript
+const updated = await ApiService.invoke({
+  resource: "genies",
+  action: "update",
+  id: "abc-123",
+  data: {
+    genieName: "Updated Agent Name",
+  },
+});
+```
+
+### Delete a resource
+
+```typescript
+await ApiService.invoke({
+  resource: "genies",
+  action: "delete",
+  id: "abc-123",
+});
+```
+
+## Response structure
+
+All responses use a consistent envelope:
+
+### Success response
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "abc-123",
+    "genieName": "Support Agent",
+    "voiceId": "voice-abc-123",
+    "created_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+For list and all actions, `data` is an array:
+
+```json
+{
+  "success": true,
+  "data": [
+    { "id": "abc-123", "genieName": "Support Agent" },
+    { "id": "def-456", "genieName": "Sales Agent" }
+  ]
+}
+```
+
+<Note>
+  When using `ApiService.invoke()`, the response is automatically unwrapped. You receive the `data` value directly, not the full envelope.
+</Note>
+
+### Error response
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Resource not found",
+    "status": 404
+  }
+}
+```
+
+See [Error handling](/getting-started/errors) for all error codes.
+
+## Admin mode and impersonation
+
+Users with the `internal_admin` role can operate on behalf of other users by including an `impersonatedUserId` in the request data. This is used for provisioning trial agents, bulk operations, and testing.
+
+```typescript
+const trialGenie = await ApiService.invoke({
+  resource: "genies",
+  action: "create",
+  data: {
+    genieName: "Trial Genie",
+    voiceId: "voice-123",
+    impersonatedUserId: "user-456",
+  },
+});
+```
+
+<Warning>
+  Impersonation is only available to `internal_admin` users. Non-admin requests that include `impersonatedUserId` will be ignored or rejected.
+</Warning>
+
+## Query parameters
+
+When using REST-style HTTP requests, query parameters are automatically extracted and passed to handlers:
+
+```bash
+GET /functions/v1/api/genies?limit=30&cursor=abc123
+```
+
+When using the body-based approach, include pagination and filter parameters in the `data` object:
+
+```typescript
+const genies = await ApiService.invoke({
+  resource: "genies",
+  action: "all",
+  data: {
+    limit: 30,
+    cursor: "abc123",
+  },
+});
+```

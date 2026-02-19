@@ -1,0 +1,125 @@
+---
+title: "Authentication"
+description: "Authenticate with the HelpGenie API using Bearer tokens from Supabase Auth"
+---
+
+All API requests require a valid Bearer token in the `Authorization` header. Tokens are issued by Supabase Auth and tied to the authenticated user's session.
+
+## Getting a token
+
+Authenticate with Supabase Auth to obtain an access token. The exact method depends on your authentication flow (email/password, magic link, OAuth, etc.).
+
+<CodeGroup>
+
+```typescript TypeScript
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  "https://<project-ref>.supabase.co",
+  "<anon-key>"
+);
+
+// Sign in (email/password example)
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: "user@example.com",
+  password: "your-password",
+});
+
+// Get the access token from the session
+const accessToken = data.session?.access_token;
+```
+
+```typescript Existing session
+// If the user is already authenticated, retrieve the current session
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const accessToken = session?.access_token;
+```
+
+</CodeGroup>
+
+## Making authenticated requests
+
+Include the token in the `Authorization` header as a Bearer token:
+
+<CodeGroup>
+
+```typescript TypeScript (ApiService)
+import { ApiService } from "@/services/api/ApiService";
+
+// ApiService handles token retrieval automatically
+const genies = await ApiService.invoke({
+  resource: "genies",
+  action: "all",
+});
+```
+
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <access-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "genies",
+    "action": "all"
+  }'
+```
+
+```typescript fetch
+const response = await fetch(
+  "https://<project-ref>.supabase.co/functions/v1/api",
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      resource: "genies",
+      action: "all",
+    }),
+  }
+);
+
+const result = await response.json();
+```
+
+</CodeGroup>
+
+## Token expiry
+
+Supabase access tokens expire after a set duration (typically 1 hour). The Supabase client library handles token refresh automatically when using `supabase.auth.getSession()` or `supabase.auth.onAuthStateChange()`.
+
+If you manage tokens manually, watch for `UNAUTHORIZED` or `INVALID_TOKEN` errors and refresh the session:
+
+```typescript
+const { data, error } = await supabase.auth.refreshSession();
+const newToken = data.session?.access_token;
+```
+
+<Warning>
+  Do not hard-code access tokens. They are short-lived and tied to individual user sessions. Always retrieve fresh tokens from the Supabase Auth session.
+</Warning>
+
+## Authentication errors
+
+| Error code | HTTP status | Description |
+| --- | --- | --- |
+| `UNAUTHORIZED` | 401 | The `Authorization` header is missing or does not contain a Bearer token. |
+| `INVALID_TOKEN` | 401 | The token is malformed, expired, or has been revoked. |
+
+Both errors return the standard error envelope:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Missing or invalid Authorization header",
+    "status": 401
+  }
+}
+```
+
+See [Error handling](/getting-started/errors) for the complete error reference.

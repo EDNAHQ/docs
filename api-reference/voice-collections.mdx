@@ -1,0 +1,280 @@
+---
+title: "Voice collections"
+description: "Create, manage, and organize collections of voices for easy access and reuse"
+---
+
+## List collections
+
+Retrieves all voice collections accessible to the authenticated user. Regular users see only their own collections; admin users see all collections.
+
+<ParamField body="resource" type="string" required>
+  `voice-collections`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `all`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="isPublic" type="boolean">
+      When `true`, retrieves only public collections. Authentication is not required for public collections.
+    </ParamField>
+    <ParamField body="isFeatured" type="boolean">
+      When `true`, returns only featured collections.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voice-collections",
+  action: "all",
+  data: {
+    isPublic: true,
+    isFeatured: true,
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="collections" type="VoiceCollection[]">
+  Array of voice collection objects.
+  <Expandable title="VoiceCollection object">
+    <ResponseField name="id" type="string">
+      Unique collection identifier.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      Collection name.
+    </ResponseField>
+    <ResponseField name="description" type="string | null">
+      Collection description.
+    </ResponseField>
+    <ResponseField name="voice_ids" type="string[]">
+      Array of voice IDs included in this collection.
+    </ResponseField>
+    <ResponseField name="is_public" type="boolean">
+      Whether the collection is publicly visible.
+    </ResponseField>
+    <ResponseField name="is_featured" type="boolean">
+      Whether the collection is marked as featured.
+    </ResponseField>
+    <ResponseField name="created_by" type="string">
+      User ID of the collection creator.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the collection was created.
+    </ResponseField>
+    <ResponseField name="updated_at" type="string">
+      ISO 8601 timestamp of the last update.
+    </ResponseField>
+    <ResponseField name="creator" type="object | null">
+      Creator profile details. Only included in admin mode.
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">
+          Creator's user ID.
+        </ResponseField>
+        <ResponseField name="full_name" type="string | null">
+          Creator's full name.
+        </ResponseField>
+        <ResponseField name="email" type="string">
+          Creator's email address.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="count" type="number">
+  Total number of collections returned.
+</ResponseField>
+
+---
+
+## Get collection
+
+Retrieves a specific voice collection by ID. Users can access their own collections and any public collections. Admin users can access any collection.
+
+<ParamField body="resource" type="string" required>
+  `voice-collections`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `get`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The collection ID.
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voice-collections",
+  action: "get",
+  id: "collection-uuid",
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="collection" type="VoiceCollection">
+  The requested voice collection object. See [VoiceCollection object](#list-collections) for field details.
+</ResponseField>
+
+---
+
+## Create collection
+
+Creates a new voice collection. Collections are private and not featured by default.
+
+<ParamField body="resource" type="string" required>
+  `voice-collections`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `create`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="name" type="string" required>
+      The collection name.
+    </ParamField>
+    <ParamField body="description" type="string">
+      A description of the collection.
+    </ParamField>
+    <ParamField body="voice_ids" type="string[]">
+      Array of voice IDs to include in the collection.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voice-collections",
+  action: "create",
+  data: {
+    name: "Customer support voices",
+    description: "Professional voices for support genies",
+    voice_ids: ["voice-1", "voice-2", "voice-3"],
+  },
+});
+```
+</CodeGroup>
+
+### Response (status 201)
+
+<ResponseField name="collection" type="VoiceCollection">
+  The newly created voice collection object.
+</ResponseField>
+
+---
+
+## Update collection
+
+Updates an existing voice collection. Users can only update their own collections.
+
+<ParamField body="resource" type="string" required>
+  `voice-collections`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `update`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The collection ID to update.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="name" type="string">
+      Updated collection name.
+    </ParamField>
+    <ParamField body="description" type="string">
+      Updated collection description.
+    </ParamField>
+    <ParamField body="voice_ids" type="string[]">
+      Updated list of voice IDs.
+    </ParamField>
+    <ParamField body="is_public" type="boolean">
+      Toggle public or private visibility.
+    </ParamField>
+    <ParamField body="is_featured" type="boolean">
+      Toggle featured status. Admin only.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<Note>
+  Only admin users can set the `is_featured` flag. The `updated_at` timestamp is set automatically.
+</Note>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voice-collections",
+  action: "update",
+  id: "collection-uuid",
+  data: {
+    name: "Updated collection name",
+    voice_ids: ["voice-1", "voice-4"],
+    is_public: true,
+  },
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="collection" type="VoiceCollection">
+  The updated voice collection object.
+</ResponseField>
+
+---
+
+## Delete collection
+
+Permanently deletes a voice collection. Users can only delete their own collections. Admin users can delete any collection.
+
+<ParamField body="resource" type="string" required>
+  `voice-collections`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  `delete`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The collection ID to delete.
+</ParamField>
+
+<CodeGroup>
+```typescript Request
+const response = await ApiService.invoke({
+  resource: "voice-collections",
+  action: "delete",
+  id: "collection-uuid",
+});
+```
+</CodeGroup>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  `true` if the collection was deleted.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message.
+</ResponseField>
+
+<Warning>
+  This action is permanent and cannot be undone.
+</Warning>

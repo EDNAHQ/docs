@@ -1,0 +1,656 @@
+---
+title: "Document folders"
+description: "Organize knowledge base documents into folders"
+---
+
+Document folders let you organize knowledge base documents into logical groups. Each folder has a name, optional color, icon, and a position for display ordering.
+
+<Note>
+  Standard users can only manage their own folders. Admin users can manage folders for any user by passing `adminMode: true` and a `userId`.
+</Note>
+
+---
+
+## List all folders
+
+Retrieves all folders for the authenticated user with full folder fields including `user_id` and `updated_at`.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"all"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. Enables cross-user access.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Target user whose folders to retrieve.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="folders" type="array">
+      <Expandable title="item properties">
+        <ResponseField name="id" type="string">Folder UUID.</ResponseField>
+        <ResponseField name="name" type="string">Folder name.</ResponseField>
+        <ResponseField name="color" type="string">Hex color code.</ResponseField>
+        <ResponseField name="icon" type="string">Icon identifier.</ResponseField>
+        <ResponseField name="position" type="number">Display order position.</ResponseField>
+        <ResponseField name="user_id" type="string">Owner user ID.</ResponseField>
+        <ResponseField name="created_at" type="string">ISO 8601 creation timestamp.</ResponseField>
+        <ResponseField name="updated_at" type="string">ISO 8601 last-updated timestamp.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Total number of folders.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke("document-folders", "all");
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "all"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "folders": [
+      {
+        "id": "folder_123",
+        "name": "Policies",
+        "color": "#3B82F6",
+        "icon": "folder",
+        "position": 0,
+        "user_id": "user_123",
+        "created_at": "2026-02-19T10:00:00.000Z",
+        "updated_at": "2026-02-19T10:00:00.000Z"
+      }
+    ],
+    "count": 1
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## List folders (compact)
+
+Retrieves folders in a compact format optimized for dropdowns and select menus. Excludes `user_id` and `updated_at`.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"list"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. Enables cross-user access.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Target user whose folders to retrieve.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="folders" type="array">
+      <Expandable title="item properties">
+        <ResponseField name="id" type="string">Folder UUID.</ResponseField>
+        <ResponseField name="name" type="string">Folder name.</ResponseField>
+        <ResponseField name="color" type="string">Hex color code.</ResponseField>
+        <ResponseField name="icon" type="string">Icon identifier.</ResponseField>
+        <ResponseField name="position" type="number">Display order position.</ResponseField>
+        <ResponseField name="created_at" type="string">ISO 8601 creation timestamp.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Total number of folders.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke("document-folders", "list");
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "list"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "folders": [
+      {
+        "id": "folder_123",
+        "name": "Policies",
+        "color": "#3B82F6",
+        "icon": "folder",
+        "position": 0,
+        "created_at": "2026-02-19T10:00:00.000Z"
+      }
+    ],
+    "count": 1
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Get folder
+
+Retrieves a single folder by ID.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"get"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The folder UUID to retrieve.
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. Enables cross-user access.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="folder" type="object">
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">Folder UUID.</ResponseField>
+        <ResponseField name="name" type="string">Folder name.</ResponseField>
+        <ResponseField name="color" type="string">Hex color code.</ResponseField>
+        <ResponseField name="icon" type="string">Icon identifier.</ResponseField>
+        <ResponseField name="position" type="number">Display order position.</ResponseField>
+        <ResponseField name="user_id" type="string">Owner user ID.</ResponseField>
+        <ResponseField name="created_at" type="string">ISO 8601 creation timestamp.</ResponseField>
+        <ResponseField name="updated_at" type="string">ISO 8601 last-updated timestamp.</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "document-folders",
+  "get",
+  "folder_123"
+);
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "get",
+  "id": "folder_123"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "folder": {
+      "id": "folder_123",
+      "name": "Policies",
+      "color": "#3B82F6",
+      "icon": "folder",
+      "position": 0,
+      "user_id": "user_123",
+      "created_at": "2026-02-19T10:00:00.000Z",
+      "updated_at": "2026-02-19T10:00:00.000Z"
+    }
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Create folder
+
+Creates a new document folder. The folder is automatically assigned the next available position.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="name" type="string" required>
+      Folder display name.
+    </ParamField>
+    <ParamField body="color" type="string">
+      Hex color code for the folder (for example `"#10B981"`).
+    </ParamField>
+    <ParamField body="icon" type="string">
+      Icon identifier (for example `"folder"`, `"briefcase"`).
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Create the folder for a specific user.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="folder" type="object">
+      The newly created folder with all fields including auto-assigned `position`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "document-folders",
+  "create",
+  undefined,
+  {
+    name: "Training Materials",
+    color: "#10B981",
+    icon: "folder",
+  }
+);
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "create",
+  "data": {
+    "name": "Training Materials",
+    "color": "#10B981",
+    "icon": "folder"
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "folder": {
+      "id": "folder_456",
+      "name": "Training Materials",
+      "color": "#10B981",
+      "icon": "folder",
+      "position": 1,
+      "user_id": "user_123",
+      "created_at": "2026-02-19T10:05:00.000Z",
+      "updated_at": "2026-02-19T10:05:00.000Z"
+    }
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Update folder
+
+Updates an existing folder's properties. Only the fields you provide are changed.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"update"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The folder UUID to update.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="name" type="string">
+      Updated folder name.
+    </ParamField>
+    <ParamField body="color" type="string">
+      Updated hex color code.
+    </ParamField>
+    <ParamField body="icon" type="string">
+      Updated icon identifier.
+    </ParamField>
+    <ParamField body="position" type="number">
+      Updated display position.
+    </ParamField>
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. Enables cross-user access.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Target user who owns the folder.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="folder" type="object">
+      The updated folder with all current field values.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "document-folders",
+  "update",
+  "folder_123",
+  {
+    name: "Company Policies",
+    color: "#F59E0B",
+    icon: "briefcase",
+  }
+);
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "update",
+  "id": "folder_123",
+  "data": {
+    "name": "Company Policies",
+    "color": "#F59E0B",
+    "icon": "briefcase"
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "folder": {
+      "id": "folder_123",
+      "name": "Company Policies",
+      "color": "#F59E0B",
+      "icon": "briefcase",
+      "position": 0,
+      "user_id": "user_123",
+      "created_at": "2026-02-19T10:00:00.000Z",
+      "updated_at": "2026-02-19T10:10:00.000Z"
+    }
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Delete folder
+
+Permanently deletes a folder. Documents in the folder are not deleted; they become uncategorized.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"delete"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The folder UUID to delete.
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. Enables cross-user access.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Target user who owns the folder.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean">Operation succeeded.</ResponseField>
+    <ResponseField name="message" type="string">Confirmation message.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "document-folders",
+  "delete",
+  "folder_123"
+);
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "delete",
+  "id": "folder_123"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "message": "Folder deleted successfully"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Reorder folders
+
+Updates the display order of folders based on an ordered array of folder IDs. The position of each folder is set to its index in the array.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"reorder"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="folderIds" type="string[]" required>
+      Ordered array of folder UUIDs. The first ID gets position 0, the second gets position 1, and so on.
+    </ParamField>
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. Enables cross-user access.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Target user whose folders to reorder.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean">Operation succeeded.</ResponseField>
+    <ResponseField name="message" type="string">Confirmation message.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "document-folders",
+  "reorder",
+  undefined,
+  {
+    folderIds: ["folder_456", "folder_123", "folder_789"],
+  }
+);
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "reorder",
+  "data": {
+    "folderIds": ["folder_456", "folder_123", "folder_789"]
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "message": "Folders reordered successfully"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Get folder document counts
+
+Returns the number of documents in each folder. Useful for displaying counts in folder lists without fetching all documents.
+
+<ParamField body="resource" type="string" required>
+  Must be `"document-folders"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"counts"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. Enables cross-user access.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Target user whose folder counts to retrieve.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="counts" type="object">
+      An object where keys are folder IDs and values are document counts.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke("document-folders", "counts");
+```
+
+```json Request body
+{
+  "resource": "document-folders",
+  "action": "counts"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "counts": {
+      "folder_123": 5,
+      "folder_456": 2
+    }
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Error codes
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `UNAUTHORIZED` | 401 | Missing or invalid authentication token |
+| `FORBIDDEN` | 403 | Only admins can manage folders for other users |
+| `NOT_FOUND` | 404 | Folder not found |
+| `VALIDATION_ERROR` | 400 | Missing or invalid parameters (for example folder ID required) |
+| `INTERNAL_ERROR` | 500 | Server-side error |

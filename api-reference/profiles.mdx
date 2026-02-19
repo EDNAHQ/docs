@@ -1,0 +1,521 @@
+---
+title: "Profiles"
+description: "Manage user profiles including account information, subscription details, and team associations."
+---
+
+All requests use a single endpoint: `POST /functions/v1/api` with `resource: "profiles"`.
+
+## Access control
+
+| Action | Regular user | Admin |
+|--------|-------------|-------|
+| `all` | No | Yes |
+| `list` | No | Yes |
+| `get` | Own profile only | Any profile |
+| `create` | No | Yes |
+| `update` | Own profile only | Any profile |
+| `delete` | Own profile only | Any profile |
+
+<Note>
+  Admin endpoints require a role starting with `internal_` (e.g. `internal_admin`). Non-admin users attempting admin-only actions receive a `403 Forbidden` response.
+</Note>
+
+---
+
+## List all profiles (admin)
+
+Retrieves all profiles with complete joined data including subscriptions, call purchases, and phone subscriptions.
+
+<ParamField body="resource" type="string" required>
+  Must be `"profiles"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"all"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number">
+      Results per page. Range: 1-500. Default: `50`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Pagination offset. Default: `0`.
+    </ParamField>
+    <ParamField body="filters" type="object">
+      <Expandable title="properties">
+        <ParamField body="searchTerm" type="string">
+          Search in `full_name` or `email`.
+        </ParamField>
+        <ParamField body="role" type="string">
+          Filter by role (exact match).
+        </ParamField>
+        <ParamField body="teamId" type="number">
+          Filter by team ID.
+        </ParamField>
+        <ParamField body="hasSubscription" type="boolean">
+          Filter profiles with active subscriptions.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="profiles" type="object[]">
+      Array of full profile objects with joined relations. See [profile object](#profile-object).
+    </ResponseField>
+    <ResponseField name="count" type="number" />
+    <ResponseField name="limit" type="number" />
+    <ResponseField name="offset" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  profiles: Profile[];
+  count: number;
+  limit: number;
+  offset: number;
+}>({
+  resource: "profiles",
+  action: "all",
+  data: {
+    limit: 100,
+    offset: 0,
+    filters: {
+      role: "internal_admin",
+    },
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## List basic profiles (admin)
+
+Retrieves a paginated list of profiles with basic fields only, optimized for lists and dropdowns.
+
+<ParamField body="resource" type="string" required>
+  Must be `"profiles"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"list"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number">
+      Results per page. Range: 1-500. Default: `50`.
+    </ParamField>
+    <ParamField body="offset" type="number">
+      Pagination offset. Default: `0`.
+    </ParamField>
+    <ParamField body="filters" type="object">
+      <Expandable title="properties">
+        <ParamField body="searchTerm" type="string">
+          Search in `full_name` or `email`.
+        </ParamField>
+        <ParamField body="role" type="string">
+          Filter by role.
+        </ParamField>
+        <ParamField body="teamId" type="number">
+          Filter by team ID.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="profiles" type="object[]">
+      <Expandable title="Basic profile fields">
+        <ResponseField name="id" type="string" />
+        <ResponseField name="full_name" type="string | null" />
+        <ResponseField name="email" type="string | null" />
+        <ResponseField name="role" type="string | null" />
+        <ResponseField name="avatar_url" type="string | null" />
+        <ResponseField name="team_id" type="number | null" />
+        <ResponseField name="created_at" type="string" />
+        <ResponseField name="updated_at" type="string" />
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number" />
+    <ResponseField name="limit" type="number" />
+    <ResponseField name="offset" type="number" />
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  profiles: Profile[];
+  count: number;
+}>({
+  resource: "profiles",
+  action: "list",
+  data: {
+    limit: 50,
+    filters: {
+      searchTerm: "john@example.com",
+    },
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Get a profile
+
+Retrieves a single profile with complete details including subscriptions and team data. Users can only access their own profile; admins can access any profile.
+
+<ParamField body="resource" type="string" required>
+  Must be `"profiles"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"get"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The profile ID (user UUID).
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="profile" type="object">
+      Full profile object with all joined relations. See [profile object](#profile-object).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const { user } = await supabase.auth.getUser();
+const response = await ApiService.invoke<{ profile: Profile }>({
+  resource: "profiles",
+  action: "get",
+  id: user.id,
+});
+
+const subscriptions = response?.profile?.call_purchases;
+```
+</CodeGroup>
+
+---
+
+## Create a profile (admin)
+
+Creates a new user profile. The `id` must match an existing auth user UUID.
+
+<ParamField body="resource" type="string" required>
+  Must be `"profiles"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="id" type="string" required>
+      Auth user UUID. Must match an existing user in the auth system.
+    </ParamField>
+    <ParamField body="full_name" type="string" />
+    <ParamField body="email" type="string" />
+    <ParamField body="role" type="string" />
+    <ParamField body="avatar_url" type="string" />
+    <ParamField body="phone_number" type="string" />
+    <ParamField body="phone_country_code" type="string" />
+    <ParamField body="address_line1" type="string" />
+    <ParamField body="address_line2" type="string" />
+    <ParamField body="city" type="string" />
+    <ParamField body="state_province" type="string" />
+    <ParamField body="country" type="string" />
+    <ParamField body="country_name" type="string" />
+    <ParamField body="postal_code" type="string" />
+    <ParamField body="company_name" type="string" />
+    <ParamField body="job_title" type="string" />
+    <ParamField body="date_of_birth" type="string" />
+    <ParamField body="timezone" type="string" />
+    <ParamField body="preferred_language" type="string" />
+    <ParamField body="billing_currency" type="string" />
+    <ParamField body="stripe_id" type="string" />
+    <ParamField body="hubspot_id" type="string" />
+    <ParamField body="team_id" type="number" />
+    <ParamField body="marketplace_creator_bio" type="string" />
+    <ParamField body="marketplace_creator_verified" type="boolean" />
+  </Expandable>
+</ParamField>
+
+### Response (status 201)
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="profile" type="object">
+      The created profile with joined data.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ profile: Profile }>(
+  {
+    resource: "profiles",
+    action: "create",
+    data: {
+      id: "auth-user-uuid-here",
+      full_name: "Jane Smith",
+      email: "jane@example.com",
+      role: "standard_user",
+    },
+  },
+  201
+);
+```
+</CodeGroup>
+
+---
+
+## Update a profile
+
+Updates an existing profile. Users can only update their own profile; admins can update any profile. This is a partial update -- only include the fields you want to change.
+
+<ParamField body="resource" type="string" required>
+  Must be `"profiles"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"update"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The profile ID (user UUID).
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  Any combination of profile fields. See the `create` action for the full list of fields (all fields except `id` are accepted).
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="profile" type="object">
+      The updated profile with joined data.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{ profile: Profile }>({
+  resource: "profiles",
+  action: "update",
+  id: userId,
+  data: {
+    full_name: "John Doe",
+    timezone: "America/New_York",
+    company_name: "Acme Corp",
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Delete a profile
+
+Permanently deletes a profile. Users can only delete their own profile; admins can delete any profile.
+
+<ParamField body="resource" type="string" required>
+  Must be `"profiles"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"delete"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The profile ID (user UUID).
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="success" type="boolean" />
+    <ResponseField name="message" type="string" />
+  </Expandable>
+</ResponseField>
+
+<Warning>
+  This permanently deletes the profile record.
+</Warning>
+
+<CodeGroup>
+```typescript Example request
+const response = await ApiService.invoke<{
+  success: boolean;
+  message: string;
+}>({
+  resource: "profiles",
+  action: "delete",
+  id: "user-uuid",
+});
+```
+</CodeGroup>
+
+---
+
+## Profile object
+
+The full profile object returned by `all`, `get`, `create`, and `update` actions.
+
+### Core fields
+
+<ResponseField name="id" type="string">
+  User UUID.
+</ResponseField>
+<ResponseField name="full_name" type="string | null" />
+<ResponseField name="email" type="string | null" />
+<ResponseField name="role" type="string | null" />
+<ResponseField name="avatar_url" type="string | null" />
+
+### Contact information
+
+<ResponseField name="phone_number" type="string | null" />
+<ResponseField name="phone_country_code" type="string | null" />
+
+### Address
+
+<ResponseField name="address_line1" type="string | null" />
+<ResponseField name="address_line2" type="string | null" />
+<ResponseField name="city" type="string | null" />
+<ResponseField name="state_province" type="string | null" />
+<ResponseField name="country" type="string | null" />
+<ResponseField name="country_name" type="string | null" />
+<ResponseField name="postal_code" type="string | null" />
+
+### Company
+
+<ResponseField name="company_name" type="string | null" />
+<ResponseField name="job_title" type="string | null" />
+
+### Preferences
+
+<ResponseField name="date_of_birth" type="string | null" />
+<ResponseField name="timezone" type="string | null" />
+<ResponseField name="preferred_language" type="string | null" />
+<ResponseField name="billing_currency" type="string | null" />
+
+### External IDs
+
+<ResponseField name="stripe_id" type="string | null" />
+<ResponseField name="hubspot_id" type="string | null" />
+
+### Marketplace
+
+<ResponseField name="marketplace_creator_bio" type="string | null" />
+<ResponseField name="marketplace_creator_verified" type="boolean | null" />
+
+### Team
+
+<ResponseField name="team_id" type="number | null" />
+<ResponseField name="team" type="object | null">
+  <Expandable title="properties">
+    <ResponseField name="id" type="number" />
+    <ResponseField name="name" type="string" />
+    <ResponseField name="brand" type="string" />
+    <ResponseField name="owner_id" type="string" />
+    <ResponseField name="created_at" type="string" />
+  </Expandable>
+</ResponseField>
+
+### Subscription
+
+<ResponseField name="subscription" type="object | null">
+  <Expandable title="properties">
+    <ResponseField name="id" type="number" />
+    <ResponseField name="status" type="string | null" />
+    <ResponseField name="price_id" type="string | null" />
+    <ResponseField name="stripe_id" type="string | null" />
+    <ResponseField name="quantity" type="number | null" />
+    <ResponseField name="trial_ends_at" type="string | null" />
+    <ResponseField name="ends_at" type="string | null" />
+    <ResponseField name="created_at" type="string" />
+  </Expandable>
+</ResponseField>
+
+### Call purchases
+
+<ResponseField name="call_purchases" type="object[]">
+  <Expandable title="properties">
+    <ResponseField name="id" type="number" />
+    <ResponseField name="quantity" type="number | null" />
+    <ResponseField name="status" type="string | null" />
+    <ResponseField name="stripe_subscription_id" type="string | null" />
+    <ResponseField name="created_at" type="string" />
+  </Expandable>
+</ResponseField>
+
+### Phone subscriptions
+
+<ResponseField name="phone_subscriptions" type="object[]">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string" />
+    <ResponseField name="phone_number" type="string" />
+    <ResponseField name="phone_type" type="string" />
+    <ResponseField name="status" type="string" />
+    <ResponseField name="stripe_price_id" type="string" />
+    <ResponseField name="created_at" type="string" />
+  </Expandable>
+</ResponseField>
+
+### Timestamps
+
+<ResponseField name="created_at" type="string" />
+<ResponseField name="updated_at" type="string" />
+
+---
+
+## Activity logging
+
+Profile mutations are logged to the `activities` table:
+
+| Action | Activity type | Action logged |
+|--------|--------------|---------------|
+| Create | `user_action` | `profile_created` |
+| Update | `user_action` | `profile_updated` (includes `updated_fields` in metadata) |
+| Delete | `user_action` | `profile_deleted` |
+
+---
+
+## Error responses
+
+| Status | Code | Description |
+|--------|------|-------------|
+| 400 | `VALIDATION_ERROR` | Profile ID not provided |
+| 401 | `UNAUTHORIZED` | Invalid or missing authentication token |
+| 403 | `FORBIDDEN` | Non-admin accessing admin-only action, or user accessing another user's profile |
+| 404 | `NOT_FOUND` | Profile does not exist |
+| 500 | `INTERNAL_ERROR` | Database operation failed |

@@ -1,33 +1,134 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API reference"
+description: "Unified REST API for managing genies, documents, folders, and groups"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
+All API requests are sent to a single endpoint on your Supabase project:
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+```
+POST https://<your-project>.supabase.co/functions/v1/api
+```
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+Every request uses the `POST` method with a JSON body that specifies the **resource**, **action**, and any required parameters.
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+Include a Supabase session access token in the `Authorization` header of every request.
+
+```
+Authorization: Bearer <session_access_token>
+Content-Type: application/json
+```
+
+Obtain a token through Supabase Auth:
+
+```typescript
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+const accessToken = session?.access_token;
+```
+
+Requests without a valid token return a `401 UNAUTHORIZED` error.
+
+## Request format
+
+All requests share the same shape:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "resource": "genies",
+  "action": "list",
+  "id": "optional-resource-id",
+  "data": {
+    // action-specific parameters
   }
-]
+}
 ```
+
+<ParamField body="resource" type="string" required>
+  The API resource to operate on. One of `genies`, `documents`, `document-folders`, or `genie-groups`.
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  The action to perform on the resource (for example `list`, `get`, `create`, `update`, `delete`).
+</ParamField>
+
+<ParamField body="id" type="string">
+  The resource identifier, required for actions that target a specific record such as `get`, `update`, and `delete`.
+</ParamField>
+
+<ParamField body="data" type="object">
+  Action-specific parameters such as filters, pagination options, or field values.
+</ParamField>
+
+## Response envelope
+
+Every response follows a consistent envelope.
+
+**Success (2xx):**
+
+```json
+{
+  "success": true,
+  "data": {
+    // action-specific response data
+  }
+}
+```
+
+**Error (4xx / 5xx):**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "status": 400
+  }
+}
+```
+
+## Error codes
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `UNAUTHORIZED` | 401 | Missing or invalid Authorization header |
+| `INVALID_TOKEN` | 401 | Token is invalid or expired |
+| `FORBIDDEN` | 403 | User lacks permission for the resource |
+| `NOT_FOUND` | 404 | Resource not found |
+| `AGENT_NOT_FOUND` | 404 | Genie not found or access denied |
+| `VALIDATION_ERROR` | 400 | Invalid request format or data |
+| `INVALID_ACTION` | 400 | Action not supported for the resource |
+| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
+| `INTERNAL_ERROR` | 500 | Server error |
+
+## Access control
+
+User roles determine what data is accessible:
+
+- **internal_admin** -- Full access to all resources across all users.
+- **standard_user** -- Access only to their own genies, documents, and related data.
+- **consumer** -- Limited read-only access to assigned genies.
+
+Admin users can pass `adminMode: true` or a `userId` parameter to operate on resources owned by other users.
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Genies" icon="robot" href="/api-reference/genies">
+    Create, update, list, and delete voice AI genies
+  </Card>
+  <Card title="Knowledge base" icon="book" href="/api-reference/knowledge-base">
+    Manage documents and attach them to genies
+  </Card>
+  <Card title="Document folders" icon="folder" href="/api-reference/document-folders">
+    Organize knowledge base documents into folders
+  </Card>
+  <Card title="Genie groups" icon="layer-group" href="/api-reference/genie-groups">
+    Group and organize genies
+  </Card>
+</CardGroup>

@@ -1,0 +1,963 @@
+---
+title: "Genies"
+description: "Create, configure, list, and manage voice AI genies"
+---
+
+Genies are voice AI agents powered by ElevenLabs. Each genie has its own system prompt, voice configuration, conversation settings, and optional phone number.
+
+<Note>
+  Standard users can only manage their own genies. Admin users can manage all genies and view owner information by passing `adminMode: true`.
+</Note>
+
+---
+
+## List genies
+
+Retrieves a paginated list of genies with optional search filtering. Returns essential fields suitable for lists and dropdowns.
+
+<ParamField body="resource" type="string" required>
+  Must be `"genies"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"list"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number" default="30">
+      Results per page. Maximum 500.
+    </ParamField>
+    <ParamField body="offset" type="number" default="0">
+      Number of results to skip.
+    </ParamField>
+    <ParamField body="filters" type="object">
+      <Expandable title="properties">
+        <ParamField body="searchTerm" type="string">
+          Filter genies by name (case-insensitive).
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="genies" type="array">
+      <Expandable title="item properties">
+        <ResponseField name="id" type="string">
+          Unique genie identifier (UUID).
+        </ResponseField>
+        <ResponseField name="name" type="string">
+          Genie display name.
+        </ResponseField>
+        <ResponseField name="description" type="string">
+          Genie description.
+        </ResponseField>
+        <ResponseField name="elevenlabs_id" type="string">
+          ElevenLabs agent identifier.
+        </ResponseField>
+        <ResponseField name="is_active" type="boolean">
+          Whether the genie is currently active.
+        </ResponseField>
+        <ResponseField name="category" type="string">
+          Genie category (for example `"Support"`, `"Sales"`).
+        </ResponseField>
+        <ResponseField name="created_at" type="string">
+          ISO 8601 creation timestamp.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Total number of genies matching the filters.
+    </ResponseField>
+    <ResponseField name="limit" type="number">
+      The limit that was applied.
+    </ResponseField>
+    <ResponseField name="offset" type="number">
+      The offset that was applied.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke("genies", "list", undefined, {
+  limit: 30,
+  offset: 0,
+  filters: {
+    searchTerm: "support",
+  },
+});
+```
+
+```json Request body
+{
+  "resource": "genies",
+  "action": "list",
+  "data": {
+    "limit": 30,
+    "offset": 0,
+    "filters": {
+      "searchTerm": "support"
+    }
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "genies": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Customer Support Bot",
+        "description": "AI-powered customer support assistant",
+        "elevenlabs_id": "agent-el-550e8400",
+        "is_active": true,
+        "category": "Support",
+        "created_at": "2024-01-15T10:30:00.000Z"
+      }
+    ],
+    "count": 1,
+    "limit": 30,
+    "offset": 0
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Get all genies
+
+Retrieves all genies with full configuration using cursor-based pagination. Returns complete genie objects including settings, phone, page, group, and knowledge base data.
+
+<ParamField body="resource" type="string" required>
+  Must be `"genies"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"all"`
+</ParamField>
+
+<ParamField body="data" type="object">
+  <Expandable title="properties">
+    <ParamField body="limit" type="number" default="30">
+      Results per page, between 1 and 500.
+    </ParamField>
+    <ParamField body="cursor" type="string">
+      Pagination cursor returned from a previous request (`nextCursor`).
+    </ParamField>
+    <ParamField body="adminMode" type="boolean" default="false">
+      Admin only. When `true`, includes owner profile information in the response.
+    </ParamField>
+    <ParamField body="userId" type="string">
+      Admin only. Filter genies to those owned by a specific user.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="data" type="array">
+      Array of full genie objects. See the get genie response for the complete shape.
+    </ResponseField>
+    <ResponseField name="nextCursor" type="string | null">
+      Pass this value as `cursor` in the next request to fetch the next page. `null` when no more results.
+    </ResponseField>
+    <ResponseField name="hasMore" type="boolean">
+      Whether more results are available beyond this page.
+    </ResponseField>
+    <ResponseField name="total" type="number">
+      Total count of genies.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+// First page
+const page1 = await ApiService.invoke("genies", "all", undefined, {
+  limit: 25,
+});
+
+// Next page
+const page2 = await ApiService.invoke("genies", "all", undefined, {
+  limit: 25,
+  cursor: page1.data.nextCursor,
+});
+```
+
+```json Request body
+{
+  "resource": "genies",
+  "action": "all",
+  "data": {
+    "limit": 25
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "user_id": "660e8400-e29b-41d4-a716-446655440001",
+        "name": "Customer Support Bot",
+        "description": "AI-powered customer support assistant",
+        "brand": "Acme Corp",
+        "elevenlabs_id": "550e8400-e29b-41d4-a716-446655440008",
+        "is_active": true,
+        "category": "Support",
+        "voice": "EZ3epTG1EiOmx2GWRto6",
+        "settings": { "..." : "full settings object" },
+        "phone": { "id": "phone-123", "number": "+1234567890", "status": "active" },
+        "page": { "id": "page-123", "url_name": "support-bot" },
+        "group": { "id": "group-123", "name": "Support Genies" },
+        "knowledge_base": [
+          { "id": "doc-123", "name": "Product FAQ", "is_active": true }
+        ],
+        "created_at": "2024-01-15T10:30:00.000Z",
+        "updated_at": "2024-01-15T10:30:00.000Z"
+      }
+    ],
+    "nextCursor": "2024-01-14T15:20:00.000Z",
+    "hasMore": true,
+    "total": 42
+  }
+}
+```
+</CodeGroup>
+
+<Note>
+  When `adminMode` is `true`, each genie includes an `owner` field with `id`, `full_name`, and `email`. Standard users always see `owner: null`.
+</Note>
+
+---
+
+## Get genie
+
+Retrieves a single genie by ID with its full configuration, including settings, phone number, page, group, and knowledge base.
+
+<ParamField body="resource" type="string" required>
+  Must be `"genies"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"get"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The UUID of the genie to retrieve.
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Unique genie identifier (UUID).
+    </ResponseField>
+    <ResponseField name="user_id" type="string">
+      Owner user ID.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      Genie display name.
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      Genie description.
+    </ResponseField>
+    <ResponseField name="brand" type="string">
+      Brand or company name.
+    </ResponseField>
+    <ResponseField name="category" type="string">
+      Genie category.
+    </ResponseField>
+    <ResponseField name="elevenlabs_id" type="string">
+      ElevenLabs agent identifier.
+    </ResponseField>
+    <ResponseField name="is_active" type="boolean">
+      Whether the genie is active.
+    </ResponseField>
+    <ResponseField name="is_setup" type="boolean">
+      Whether the genie has completed initial setup.
+    </ResponseField>
+    <ResponseField name="voice" type="string">
+      ElevenLabs voice ID.
+    </ResponseField>
+    <ResponseField name="send_conv_reports" type="boolean">
+      Whether conversation reports are sent after calls.
+    </ResponseField>
+    <ResponseField name="settings" type="object">
+      Full genie configuration including conversation config, TTS settings, and turn settings.
+      <Expandable title="properties">
+        <ResponseField name="name" type="string">
+          Genie name in settings.
+        </ResponseField>
+        <ResponseField name="conversation_config" type="object">
+          <Expandable title="properties">
+            <ResponseField name="agent" type="object">
+              <Expandable title="properties">
+                <ResponseField name="first_message" type="string">
+                  Initial greeting message.
+                </ResponseField>
+                <ResponseField name="prompt" type="object">
+                  <Expandable title="properties">
+                    <ResponseField name="prompt" type="string">System prompt.</ResponseField>
+                    <ResponseField name="llm" type="string">LLM model identifier.</ResponseField>
+                    <ResponseField name="temperature" type="number">LLM temperature (0-2).</ResponseField>
+                    <ResponseField name="max_tokens" type="number">Maximum response tokens.</ResponseField>
+                  </Expandable>
+                </ResponseField>
+              </Expandable>
+            </ResponseField>
+            <ResponseField name="tts" type="object">
+              <Expandable title="properties">
+                <ResponseField name="model_id" type="string">TTS model identifier.</ResponseField>
+                <ResponseField name="voice_id" type="string">ElevenLabs voice ID.</ResponseField>
+                <ResponseField name="stability" type="number">Voice stability (0-1).</ResponseField>
+                <ResponseField name="similarity_boost" type="number">Voice similarity (0-1).</ResponseField>
+                <ResponseField name="speed" type="number">Speech speed multiplier.</ResponseField>
+              </Expandable>
+            </ResponseField>
+            <ResponseField name="conversation" type="object">
+              <Expandable title="properties">
+                <ResponseField name="text_only" type="boolean">Whether voice is disabled.</ResponseField>
+                <ResponseField name="max_duration_seconds" type="number">Maximum conversation duration in seconds.</ResponseField>
+              </Expandable>
+            </ResponseField>
+            <ResponseField name="turn" type="object">
+              <Expandable title="properties">
+                <ResponseField name="turn_timeout" type="number">Seconds before a turn times out.</ResponseField>
+                <ResponseField name="silence_end_call_timeout" type="number">Seconds of silence before ending the call.</ResponseField>
+                <ResponseField name="mode" type="string">Turn detection mode (for example `"silence"`).</ResponseField>
+              </Expandable>
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="position" type="number">
+      Display order position.
+    </ResponseField>
+    <ResponseField name="call_limit" type="number">
+      Maximum number of calls allowed.
+    </ResponseField>
+    <ResponseField name="phone" type="object">
+      Attached phone number, or `null`.
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">Phone record ID.</ResponseField>
+        <ResponseField name="number" type="string">Phone number in E.164 format.</ResponseField>
+        <ResponseField name="status" type="string">Phone status (for example `"active"`).</ResponseField>
+        <ResponseField name="country_code" type="string">Two-letter country code.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="page" type="object">
+      Web page configuration, or `null`.
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">Page record ID.</ResponseField>
+        <ResponseField name="url_name" type="string">URL-friendly page slug.</ResponseField>
+        <ResponseField name="welcome_message" type="string">Welcome message displayed on the page.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="group" type="object">
+      Group the genie belongs to, or `null`.
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">Group ID.</ResponseField>
+        <ResponseField name="name" type="string">Group name.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="knowledge_base" type="array">
+      Documents attached to this genie.
+      <Expandable title="item properties">
+        <ResponseField name="id" type="string">Document ID.</ResponseField>
+        <ResponseField name="name" type="string">Document name.</ResponseField>
+        <ResponseField name="is_active" type="boolean">Whether the document is active.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 creation timestamp.
+    </ResponseField>
+    <ResponseField name="updated_at" type="string">
+      ISO 8601 last-updated timestamp.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "genies",
+  "get",
+  "550e8400-e29b-41d4-a716-446655440000"
+);
+```
+
+```json Request body
+{
+  "resource": "genies",
+  "action": "get",
+  "id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "660e8400-e29b-41d4-a716-446655440001",
+    "name": "Customer Support Bot",
+    "description": "AI-powered customer support assistant",
+    "brand": "Acme Corp",
+    "category": "Support",
+    "elevenlabs_id": "550e8400-e29b-41d4-a716-446655440008",
+    "is_active": true,
+    "is_setup": false,
+    "voice": "EZ3epTG1EiOmx2GWRto6",
+    "send_conv_reports": true,
+    "settings": {
+      "name": "Customer Support Bot",
+      "conversation_config": {
+        "agent": {
+          "first_message": "Hello! Welcome to our support team. How can I help you today?",
+          "prompt": {
+            "prompt": "You are a helpful customer support representative...",
+            "llm": "gemini-3-flash-preview",
+            "temperature": 0.7,
+            "max_tokens": 8000
+          }
+        },
+        "tts": {
+          "model_id": "eleven_multilingual_v2",
+          "voice_id": "550e8400-e29b-41d4-a716-446655440009",
+          "stability": 0.5,
+          "similarity_boost": 0.8,
+          "speed": 1.0
+        },
+        "conversation": {
+          "text_only": false,
+          "max_duration_seconds": 600
+        },
+        "turn": {
+          "turn_timeout": 7,
+          "silence_end_call_timeout": 30,
+          "mode": "silence"
+        }
+      }
+    },
+    "position": 0,
+    "call_limit": 30,
+    "phone": {
+      "id": "phone-123",
+      "number": "+1234567890",
+      "status": "active",
+      "country_code": "US"
+    },
+    "page": {
+      "id": "page-123",
+      "url_name": "support-bot",
+      "welcome_message": "Let's connect with our support team"
+    },
+    "group": {
+      "id": "group-123",
+      "name": "Support Genies"
+    },
+    "knowledge_base": [
+      {
+        "id": "doc-123",
+        "name": "Product FAQ",
+        "is_active": true
+      }
+    ],
+    "created_at": "2024-01-15T10:30:00.000Z",
+    "updated_at": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Create genie
+
+Creates a new voice AI genie with the specified configuration. The genie is automatically provisioned in ElevenLabs.
+
+<ParamField body="resource" type="string" required>
+  Must be `"genies"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="genieName" type="string" required>
+      Display name for the genie.
+    </ParamField>
+    <ParamField body="useCase" type="string" required>
+      Primary use case describing what the genie does.
+    </ParamField>
+    <ParamField body="systemPrompt" type="string" required>
+      System prompt defining the genie's behavior and personality.
+    </ParamField>
+    <ParamField body="firstMessage" type="string" required>
+      Initial greeting message spoken when a conversation starts.
+    </ParamField>
+    <ParamField body="webWelcomeMessage" type="string" required>
+      Welcome message displayed on the web interface before a call begins.
+    </ParamField>
+    <ParamField body="voiceId" type="string">
+      ElevenLabs voice ID. Defaults to the platform default voice.
+    </ParamField>
+    <ParamField body="llmModel" type="string" default="gemini-3-flash-preview">
+      LLM model identifier.
+    </ParamField>
+    <ParamField body="temperature" type="number" default="0.7">
+      LLM temperature between 0 and 2.
+    </ParamField>
+    <ParamField body="maxTokens" type="number" default="8000">
+      Maximum number of tokens in the LLM response.
+    </ParamField>
+    <ParamField body="isMultilingual" type="boolean" default="true">
+      Enable multilingual voice support.
+    </ParamField>
+    <ParamField body="voiceStability" type="number" default="0.5">
+      Voice stability between 0 and 1.
+    </ParamField>
+    <ParamField body="voiceSimilarity" type="number" default="0.8">
+      Voice similarity between 0 and 1.
+    </ParamField>
+    <ParamField body="speechSpeed" type="number" default="1.0">
+      Speech speed multiplier.
+    </ParamField>
+    <ParamField body="conversationSettings" type="object">
+      <Expandable title="properties">
+        <ParamField body="maxDuration" type="number" default="600">
+          Maximum conversation duration in seconds.
+        </ParamField>
+        <ParamField body="turnTimeout" type="number" default="7">
+          Seconds before a turn times out.
+        </ParamField>
+        <ParamField body="silenceTimeout" type="number" default="30">
+          Seconds of silence before ending the call.
+        </ParamField>
+        <ParamField body="turnMode" type="string" default="silence">
+          Turn detection mode.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+    <ParamField body="brand" type="string">
+      Brand or company name.
+    </ParamField>
+    <ParamField body="category" type="string">
+      Genie category or type.
+    </ParamField>
+    <ParamField body="description" type="string">
+      Detailed description of the genie.
+    </ParamField>
+    <ParamField body="supportEmails" type="string[]">
+      Email addresses for the support team.
+    </ParamField>
+    <ParamField body="sendConversationReports" type="boolean" default="true">
+      Send email reports after each conversation.
+    </ParamField>
+    <ParamField body="attachPhoneNumber" type="boolean" default="false">
+      Provision and attach a phone number to this genie.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Genie UUID.</ResponseField>
+    <ResponseField name="user_id" type="string">Owner user ID.</ResponseField>
+    <ResponseField name="name" type="string">Genie name.</ResponseField>
+    <ResponseField name="description" type="string">Genie description.</ResponseField>
+    <ResponseField name="brand" type="string">Brand name.</ResponseField>
+    <ResponseField name="category" type="string">Category.</ResponseField>
+    <ResponseField name="elevenlabs_id" type="string">ElevenLabs agent ID.</ResponseField>
+    <ResponseField name="is_active" type="boolean">Active status.</ResponseField>
+    <ResponseField name="created_at" type="string">ISO 8601 creation timestamp.</ResponseField>
+    <ResponseField name="updated_at" type="string">ISO 8601 last-updated timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke("genies", "create", undefined, {
+  genieName: "Customer Support Bot",
+  useCase: "Handle customer support inquiries",
+  systemPrompt:
+    "You are a helpful customer support representative. Be friendly and professional.",
+  firstMessage:
+    "Hello! Welcome to our support team. How can I help you today?",
+  webWelcomeMessage: "Let's connect with our support team",
+  voiceId: "EZ3epTG1EiOmx2GWRto6",
+  llmModel: "gemini-3-flash-preview",
+  temperature: 0.7,
+  maxTokens: 8000,
+  brand: "Acme Corp",
+  category: "Support",
+  description: "AI-powered customer support assistant",
+  supportEmails: ["support@acme.com"],
+  sendConversationReports: true,
+  attachPhoneNumber: false,
+});
+```
+
+```json Request body
+{
+  "resource": "genies",
+  "action": "create",
+  "data": {
+    "genieName": "Customer Support Bot",
+    "useCase": "Handle customer support inquiries",
+    "systemPrompt": "You are a helpful customer support representative. Be friendly and professional.",
+    "firstMessage": "Hello! Welcome to our support team. How can I help you today?",
+    "webWelcomeMessage": "Let's connect with our support team",
+    "voiceId": "EZ3epTG1EiOmx2GWRto6",
+    "llmModel": "gemini-3-flash-preview",
+    "temperature": 0.7,
+    "maxTokens": 8000,
+    "brand": "Acme Corp",
+    "category": "Support",
+    "description": "AI-powered customer support assistant",
+    "supportEmails": ["support@acme.com"],
+    "sendConversationReports": true,
+    "attachPhoneNumber": false
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Genie created successfully",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "660e8400-e29b-41d4-a716-446655440001",
+    "name": "Customer Support Bot",
+    "description": "AI-powered customer support assistant",
+    "brand": "Acme Corp",
+    "category": "Support",
+    "elevenlabs_id": "550e8400-e29b-41d4-a716-446655440008",
+    "is_active": true,
+    "created_at": "2024-01-15T10:30:00.000Z",
+    "updated_at": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+</CodeGroup>
+
+<Note>
+  Admin users can create genies on behalf of other users by including `impersonatedUserId` in the data object.
+</Note>
+
+---
+
+## Update genie
+
+Updates an existing genie's configuration. Supports partial updates -- only the fields you include will be changed.
+
+<ParamField body="resource" type="string" required>
+  Must be `"genies"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"update"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The UUID of the genie to update.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="name" type="string">
+      Updated genie name.
+    </ParamField>
+    <ParamField body="description" type="string">
+      Updated description.
+    </ParamField>
+    <ParamField body="settings" type="object">
+      Nested settings object. Fields are merged, not replaced.
+      <Expandable title="properties">
+        <ParamField body="conversation_config" type="object">
+          <Expandable title="properties">
+            <ParamField body="agent" type="object">
+              <Expandable title="properties">
+                <ParamField body="first_message" type="string">Updated greeting.</ParamField>
+                <ParamField body="prompt" type="object">
+                  <Expandable title="properties">
+                    <ParamField body="prompt" type="string">Updated system prompt.</ParamField>
+                    <ParamField body="temperature" type="number">LLM temperature (0-2).</ParamField>
+                    <ParamField body="max_tokens" type="number">Max response tokens.</ParamField>
+                  </Expandable>
+                </ParamField>
+              </Expandable>
+            </ParamField>
+            <ParamField body="tts" type="object">
+              <Expandable title="properties">
+                <ParamField body="voice_id" type="string">New ElevenLabs voice ID.</ParamField>
+                <ParamField body="stability" type="number">Voice stability (0-1).</ParamField>
+                <ParamField body="similarity_boost" type="number">Voice similarity (0-1).</ParamField>
+                <ParamField body="speed" type="number">Speech speed multiplier.</ParamField>
+              </Expandable>
+            </ParamField>
+          </Expandable>
+        </ParamField>
+      </Expandable>
+    </ParamField>
+    <ParamField body="branding" type="object">
+      Branding configuration. Merged with existing branding.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Genie UUID.</ResponseField>
+    <ResponseField name="name" type="string">Updated genie name.</ResponseField>
+    <ResponseField name="description" type="string">Updated description.</ResponseField>
+    <ResponseField name="updated_at" type="string">ISO 8601 timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "genies",
+  "update",
+  "550e8400-e29b-41d4-a716-446655440000",
+  {
+    name: "Updated Bot Name",
+    description: "Updated description",
+    settings: {
+      conversation_config: {
+        agent: {
+          first_message: "Updated greeting message",
+          prompt: {
+            prompt: "You are an advanced customer support AI...",
+            temperature: 0.8,
+            max_tokens: 2048,
+          },
+        },
+        tts: {
+          voice_id: "new-voice-id",
+          stability: 0.8,
+          similarity_boost: 0.9,
+          speed: 1.05,
+        },
+      },
+    },
+  }
+);
+```
+
+```json Request body
+{
+  "resource": "genies",
+  "action": "update",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "name": "Updated Bot Name",
+    "description": "Updated description",
+    "settings": {
+      "conversation_config": {
+        "agent": {
+          "first_message": "Updated greeting message",
+          "prompt": {
+            "prompt": "You are an advanced customer support AI...",
+            "temperature": 0.8,
+            "max_tokens": 2048
+          }
+        },
+        "tts": {
+          "voice_id": "new-voice-id",
+          "stability": 0.8,
+          "similarity_boost": 0.9,
+          "speed": 1.05
+        }
+      }
+    }
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Genie updated successfully",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Updated Bot Name",
+    "description": "Updated description",
+    "updated_at": "2024-01-15T11:00:00.000Z"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Delete genie
+
+Permanently deletes a genie, removes it from ElevenLabs, and releases any associated phone numbers.
+
+<ParamField body="resource" type="string" required>
+  Must be `"genies"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"delete"`
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The UUID of the genie to delete.
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message.
+</ResponseField>
+
+<Warning>
+  This action is irreversible. The genie, its ElevenLabs agent, and any attached phone numbers will be permanently removed.
+</Warning>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke(
+  "genies",
+  "delete",
+  "550e8400-e29b-41d4-a716-446655440000"
+);
+```
+
+```json Request body
+{
+  "resource": "genies",
+  "action": "delete",
+  "id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Genie deleted successfully"
+}
+```
+</CodeGroup>
+
+---
+
+## Reorder genies
+
+Updates the display order of genies. Pass an object mapping genie IDs to their desired position (zero-indexed).
+
+<ParamField body="resource" type="string" required>
+  Must be `"genies"`
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"reorder"`
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  <Expandable title="properties">
+    <ParamField body="sort" type="object" required>
+      An object where keys are genie UUIDs and values are integer positions starting from 0.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message.
+</ResponseField>
+
+<CodeGroup>
+```typescript ApiService.invoke()
+const response = await ApiService.invoke("genies", "reorder", undefined, {
+  sort: {
+    "550e8400-e29b-41d4-a716-446655440000": 0,
+    "990e8400-e29b-41d4-a716-446655440004": 1,
+    "aa0e8400-e29b-41d4-a716-446655440005": 2,
+  },
+});
+```
+
+```json Request body
+{
+  "resource": "genies",
+  "action": "reorder",
+  "data": {
+    "sort": {
+      "550e8400-e29b-41d4-a716-446655440000": 0,
+      "990e8400-e29b-41d4-a716-446655440004": 1,
+      "aa0e8400-e29b-41d4-a716-446655440005": 2
+    }
+  }
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Genies reordered successfully"
+}
+```
+</CodeGroup>
+
+---
+
+## Error codes
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `UNAUTHORIZED` | 401 | Missing or invalid token |
+| `INVALID_TOKEN` | 401 | Token validation failed |
+| `FORBIDDEN` | 403 | User lacks required permissions |
+| `AGENT_NOT_FOUND` | 404 | Genie not found or access denied |
+| `VALIDATION_ERROR` | 400 | Invalid request parameters |
+| `INTERNAL_ERROR` | 500 | Server error |
