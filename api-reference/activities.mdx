@@ -61,6 +61,42 @@ Retrieves a paginated, filterable list of activity log entries. Standard users s
   </Expandable>
 </ParamField>
 
+### Common enum values
+
+The following tables list the most commonly used values for the filter and data fields. These are not exhaustive -- custom values may appear as new features are added.
+
+**`activity_type` values**
+
+| Value | Description |
+| --- | --- |
+| `genie` | Actions related to genie (agent) management |
+| `document` | Knowledge base document operations |
+| `user` | User account and profile changes |
+| `team` | Team membership and settings changes |
+| `conversation` | Conversation lifecycle events |
+| `system` | System-generated events (billing, maintenance, etc.) |
+
+**`action` values**
+
+| Value | Description |
+| --- | --- |
+| `created` | A resource was created |
+| `updated` | A resource was modified |
+| `deleted` | A resource was removed |
+| `viewed` | A resource was accessed or opened |
+| `exported` | Data was exported |
+| `imported` | Data was imported |
+
+**`category` values**
+
+| Value | Description |
+| --- | --- |
+| `agent_management` | Genie creation, configuration, and deployment |
+| `knowledge_management` | Document uploads, processing, and organization |
+| `user_management` | User invitations, role changes, and profile updates |
+| `team_management` | Team creation, member additions, and settings |
+| `conversation` | Conversation syncing, analysis, and review |
+
 <CodeGroup>
 ```typescript Request
 const response = await ApiService.invoke({
@@ -70,13 +106,36 @@ const response = await ApiService.invoke({
     limit: 20,
     offset: 0,
     filters: {
-      category: "genie",
+      category: "agent_management",
+      activityType: "genie",
+      action: "created",
       startDate: "2025-01-01T00:00:00Z",
       endDate: "2025-12-31T23:59:59Z",
       searchTerm: "created",
     },
   },
 });
+```
+
+```bash cURL
+curl -X POST https://your-project.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "activities",
+    "action": "all",
+    "data": {
+      "limit": 20,
+      "offset": 0,
+      "filters": {
+        "category": "agent_management",
+        "activityType": "genie",
+        "action": "created",
+        "startDate": "2025-01-01T00:00:00Z",
+        "endDate": "2025-12-31T23:59:59Z"
+      }
+    }
+  }'
 ```
 </CodeGroup>
 
@@ -307,5 +366,5 @@ const response = await ApiService.invoke({
 </CodeGroup>
 
 <Warning>
-  Activity records are immutable once created. The `update` and `delete` actions return `403 FORBIDDEN` for all callers, including admins.
+  Activity records are immutable once created. The `update` and `delete` actions return `403 FORBIDDEN` for **all** callers, including admin users and service-role tokens. This is by design -- audit logs must remain tamper-proof. If you need to correct an activity, create a new compensating entry instead.
 </Warning>

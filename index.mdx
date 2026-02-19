@@ -84,3 +84,27 @@ The HelpGenie API gives you programmatic access to voice agents, knowledge bases
     Manage user profiles, teams, and activity logs.
   </Card>
 </Columns>
+
+## Quick reference
+
+Every resource and its available actions at a glance:
+
+| Resource | Actions |
+|----------|---------|
+| Genies | `list` `all` `get` `create` `update` `delete` `reorder` |
+| Knowledge Base | `list` `get` `create` `update` `delete` `sync-with-agents` `attach` `detach` `replace` |
+| Document Folders | `all` `list` `get` `create` `update` `delete` `reorder` `counts` |
+| Genie Groups | `list` `get` `create` `update` `delete` `reorder` `counts` `sync` |
+| Conversations | `list` `get` `sync` `analyze` `update` `delete` |
+| Voices | `favorites` `popular` `recent` `add-favorite` `remove-favorite` `track-usage` |
+| Voice Collections | `all` `get` `create` `update` `delete` |
+| Leads | `stats` `all` `list` `get` `create` `update` `delete` |
+| Lead Notes | `list` `get` `create` `update` `delete` `togglePin` `pinned` |
+| Marketplace | `list` `all` `get` `create` `update` `delete` `categories` `stats` |
+| Profiles | `all` `list` `get` `create` `update` `delete` |
+| Teams | `get` `create` `update` `delete` `members` `invite` `invitations` `cancel-invite` `remove-member` |
+| Activities | `all` `get` `create` |
+
+<Info>
+  All requests are `POST` to a single endpoint with the `resource` and `action` specified in the request body. See [Making requests](/getting-started/making-requests) for full details.
+</Info>

@@ -198,6 +198,18 @@ const page2 = await ApiService.invoke("genies", "all", undefined, {
 });
 ```
 
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genies \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "all",
+    "data": {
+      "limit": 25
+    }
+  }'
+```
+
 ```json Request body
 {
   "resource": "genies",
@@ -406,6 +418,16 @@ const response = await ApiService.invoke(
   "get",
   "550e8400-e29b-41d4-a716-446655440000"
 );
+```
+
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genies \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "get",
+    "id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
 ```
 
 ```json Request body
@@ -628,6 +650,29 @@ const response = await ApiService.invoke("genies", "create", undefined, {
   sendConversationReports: true,
   attachPhoneNumber: false,
 });
+```
+
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genies \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "create",
+    "data": {
+      "genieName": "Customer Support Bot",
+      "useCase": "Handle customer support inquiries",
+      "systemPrompt": "You are a helpful customer support representative. Be friendly and professional.",
+      "firstMessage": "Hello! Welcome to our support team. How can I help you today?",
+      "webWelcomeMessage": "Let us connect with our support team",
+      "voiceId": "EZ3epTG1EiOmx2GWRto6",
+      "brand": "Acme Corp",
+      "category": "Support",
+      "description": "AI-powered customer support assistant",
+      "supportEmails": ["support@acme.com"],
+      "sendConversationReports": true,
+      "attachPhoneNumber": false
+    }
+  }'
 ```
 
 ```json Request body

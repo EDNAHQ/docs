@@ -567,6 +567,10 @@ Assigns or clears a group for a specific genie. Pass a `groupId` to assign the g
   </Expandable>
 </ResponseField>
 
+<Tip>
+  Use the `sync` action to move a genie between groups. To transfer a genie from one group to another, simply pass the new `groupId` -- the genie is automatically removed from its previous group. To remove a genie from all groups without assigning a new one, pass `groupId: null`.
+</Tip>
+
 <CodeGroup>
 ```typescript ApiService.invoke()
 // Assign a genie to a group
@@ -590,6 +594,32 @@ const response = await ApiService.invoke(
     groupId: null,
   }
 );
+```
+
+```bash cURL (assign to group)
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genie-groups \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "sync",
+    "data": {
+      "agentId": "550e8400-e29b-41d4-a716-446655440000",
+      "groupId": 2
+    }
+  }'
+```
+
+```bash cURL (remove from group)
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genie-groups \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "sync",
+    "data": {
+      "agentId": "550e8400-e29b-41d4-a716-446655440000",
+      "groupId": null
+    }
+  }'
 ```
 
 ```json Request body (assign)

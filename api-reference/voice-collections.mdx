@@ -26,6 +26,10 @@ Retrieves all voice collections accessible to the authenticated user. Regular us
   </Expandable>
 </ParamField>
 
+<Note>
+  The `is_featured` flag can only be set by admin users (`internal_*` role). Standard users can filter by `isFeatured` to browse featured collections, but cannot create or update collections with featured status.
+</Note>
+
 <CodeGroup>
 ```typescript Request
 const response = await ApiService.invoke({
@@ -36,6 +40,20 @@ const response = await ApiService.invoke({
     isFeatured: true,
   },
 });
+```
+
+```bash cURL
+curl -X POST https://your-project.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "voice-collections",
+    "action": "all",
+    "data": {
+      "isPublic": true,
+      "isFeatured": true
+    }
+  }'
 ```
 </CodeGroup>
 

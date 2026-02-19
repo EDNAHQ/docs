@@ -17,6 +17,10 @@ All requests use a single endpoint: `POST /functions/v1/api` with `resource: "le
 
 Retrieves all notes for a specific lead. Pinned notes appear first in the results.
 
+<Tip>
+  Pinned notes always appear at the top of list results regardless of pagination or creation date. Use the `togglePin` action or set `is_pinned: true` on update to pin important notes so they are never buried.
+</Tip>
+
 <ParamField body="resource" type="string" required>
   Must be `"lead-notes"`
 </ParamField>
@@ -164,6 +168,20 @@ const response = await ApiService.invoke<{ note: LeadNote }>(
 );
 
 const note = response?.note;
+```
+
+```bash cURL
+curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "lead-notes",
+    "action": "create",
+    "data": {
+      "leadId": 123,
+      "content": "Spoke with Jane — interested in the enterprise plan. Schedule a demo for next Tuesday."
+    }
+  }'
 ```
 </CodeGroup>
 

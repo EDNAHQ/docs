@@ -11,6 +11,19 @@ All requests use a single endpoint: `POST /functions/v1/api` with `resource: "ma
   The `list`, `all`, `get`, `categories`, and `stats` actions are publicly accessible. The `create`, `update`, and `delete` actions require internal admin authentication.
 </Note>
 
+<Warning>
+  The `create`, `update`, and `delete` actions are admin-only operations. Only users with the `internal_admin` role can perform these actions. Non-admin users will receive a `403 Forbidden` response.
+</Warning>
+
+### `sortBy` values
+
+| Value | Description |
+|-------|-------------|
+| `"popular"` | Sort by view count (most viewed first) |
+| `"newest"` | Sort by creation date (most recent first) -- **default** |
+| `"rating"` | Sort by rating (highest rated first) |
+| `"clones"` | Sort by clone count (most cloned first) |
+
 ---
 
 ## List genies (slim)
@@ -104,6 +117,26 @@ const response = await ApiService.invoke<{
     },
   },
 });
+```
+
+```bash cURL
+curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "marketplace",
+    "action": "list",
+    "data": {
+      "limit": 20,
+      "offset": 0,
+      "query": {
+        "category": "customer-service",
+        "search": "sales",
+        "sortBy": "popular",
+        "featured": "true",
+        "minRating": "4"
+      }
+    }
+  }'
 ```
 </CodeGroup>
 

@@ -11,7 +11,9 @@ The HelpGenie API supports two ways to make requests: the `ApiService.invoke()` 
 
 The `ApiService` class handles authentication, request formatting, and response unwrapping automatically:
 
-```typescript
+<CodeGroup>
+
+```typescript TypeScript
 import { ApiService } from "@/services/api/ApiService";
 
 const genies = await ApiService.invoke({
@@ -19,6 +21,18 @@ const genies = await ApiService.invoke({
   action: "all",
 });
 ```
+
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "genies",
+    "action": "all"
+  }'
+```
+
+</CodeGroup>
 
 The `invoke` method accepts an options object with these fields:
 
@@ -102,7 +116,9 @@ The API distinguishes between two fetching actions:
 - **`all`** returns full records with related data (joins, counts, nested objects). Use this when you need complete information.
 - **`list`** returns minimal records with only key fields (typically `id` and `name`). Use this for populating dropdowns, selectors, or anywhere you need a lightweight list.
 
-```typescript
+<CodeGroup>
+
+```typescript TypeScript
 // Full records with all relations — use for detail views
 const allGenies = await ApiService.invoke({
   resource: "genies",
@@ -116,11 +132,35 @@ const genieList = await ApiService.invoke({
 });
 ```
 
+```bash cURL
+# Full records with all relations
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"resource": "genies", "action": "all"}'
+
+# Compact records for dropdowns
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"resource": "genies", "action": "list"}'
+```
+
+</CodeGroup>
+
+<Note>
+  **Pagination differs between `all` and `list`.**
+  - The `all` action on **genies** uses **cursor-based** pagination. The response includes `nextCursor` and `hasMore` fields. Pass `cursor` in the request data to fetch the next page.
+  - Most other resources use **offset-based** pagination. The response includes `count`, and you control paging with `limit` and `offset` in the request data.
+</Note>
+
 ## Request examples
 
 ### Create a resource
 
-```typescript
+<CodeGroup>
+
+```typescript TypeScript
 const newGenie = await ApiService.invoke({
   resource: "genies",
   action: "create",
@@ -132,9 +172,28 @@ const newGenie = await ApiService.invoke({
 });
 ```
 
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "genies",
+    "action": "create",
+    "data": {
+      "genieName": "Support Agent",
+      "voiceId": "voice-abc-123",
+      "firstMessage": "Hi, how can I help you today?"
+    }
+  }'
+```
+
+</CodeGroup>
+
 ### Get a single resource
 
-```typescript
+<CodeGroup>
+
+```typescript TypeScript
 const genie = await ApiService.invoke({
   resource: "genies",
   action: "get",
@@ -142,9 +201,24 @@ const genie = await ApiService.invoke({
 });
 ```
 
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "genies",
+    "action": "get",
+    "id": "abc-123"
+  }'
+```
+
+</CodeGroup>
+
 ### Update a resource
 
-```typescript
+<CodeGroup>
+
+```typescript TypeScript
 const updated = await ApiService.invoke({
   resource: "genies",
   action: "update",
@@ -155,15 +229,46 @@ const updated = await ApiService.invoke({
 });
 ```
 
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "genies",
+    "action": "update",
+    "id": "abc-123",
+    "data": {
+      "genieName": "Updated Agent Name"
+    }
+  }'
+```
+
+</CodeGroup>
+
 ### Delete a resource
 
-```typescript
+<CodeGroup>
+
+```typescript TypeScript
 await ApiService.invoke({
   resource: "genies",
   action: "delete",
   id: "abc-123",
 });
 ```
+
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "genies",
+    "action": "delete",
+    "id": "abc-123"
+  }'
+```
+
+</CodeGroup>
 
 ## Response structure
 
@@ -244,7 +349,9 @@ GET /functions/v1/api/genies?limit=30&cursor=abc123
 
 When using the body-based approach, include pagination and filter parameters in the `data` object:
 
-```typescript
+<CodeGroup>
+
+```typescript TypeScript
 const genies = await ApiService.invoke({
   resource: "genies",
   action: "all",
@@ -254,3 +361,19 @@ const genies = await ApiService.invoke({
   },
 });
 ```
+
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "genies",
+    "action": "all",
+    "data": {
+      "limit": 30,
+      "cursor": "abc123"
+    }
+  }'
+```
+
+</CodeGroup>

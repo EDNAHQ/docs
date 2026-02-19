@@ -38,6 +38,26 @@ const {
 const accessToken = session?.access_token;
 ```
 
+```bash cURL
+# Supabase Auth exposes a REST endpoint for email/password sign-in.
+# Exchange credentials for an access token:
+curl -X POST "https://<project-ref>.supabase.co/auth/v1/token?grant_type=password" \
+  -H "apikey: <anon-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "your-password"
+  }'
+
+# The response includes an access_token you can use for API requests:
+# {
+#   "access_token": "eyJhbGciOiJIUzI1NiIs...",
+#   "token_type": "bearer",
+#   "expires_in": 3600,
+#   "refresh_token": "v1.MRMx..."
+# }
+```
+
 </CodeGroup>
 
 ## Making authenticated requests

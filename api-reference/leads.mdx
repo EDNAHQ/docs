@@ -209,6 +209,26 @@ const response = await ApiService.invoke<{
   },
 });
 ```
+
+```bash cURL
+curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "leads",
+    "action": "all",
+    "data": {
+      "filters": {
+        "agentId": "agent-123",
+        "status": "qualified",
+        "priority": "high",
+        "dateRange": "90d"
+      },
+      "limit": 25,
+      "offset": 0
+    }
+  }'
+```
 </CodeGroup>
 
 ---
@@ -437,6 +457,28 @@ const response = await ApiService.invoke<{ lead: Lead }>(
   201
 );
 ```
+
+```bash cURL
+curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "leads",
+    "action": "create",
+    "data": {
+      "agent_id": "agent-123",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "+1234567890",
+      "status": "new",
+      "priority": "high",
+      "preferred_contact_method": "email",
+      "budget": "50000",
+      "timeline": "Q2 2026",
+      "notes": "Interested in enterprise plan"
+    }
+  }'
+```
 </CodeGroup>
 
 ---
@@ -568,6 +610,35 @@ The full lead object returned by `all`, `get`, `create`, and `update` actions.
     <ResponseField name="user_id" type="string" />
   </Expandable>
 </ResponseField>
+
+---
+
+## Enum values reference
+
+### `status`
+
+| Value | Description |
+|-------|-------------|
+| `"new"` | Lead has been captured but not yet contacted |
+| `"contacted"` | Initial outreach has been made |
+| `"qualified"` | Lead has been vetted and meets criteria |
+| `"converted"` | Lead has been successfully converted |
+
+### `priority`
+
+| Value | Description |
+|-------|-------------|
+| `"low"` | Low urgency |
+| `"medium"` | Standard urgency |
+| `"high"` | Requires immediate attention |
+
+### `preferred_contact_method`
+
+| Value | Description |
+|-------|-------------|
+| `"email"` | Contact via email |
+| `"phone"` | Contact via phone call |
+| `"sms"` | Contact via text message |
 
 ---
 

@@ -311,6 +311,20 @@ const response = await ApiService.invoke(
 );
 ```
 
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/document-folders \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "create",
+    "data": {
+      "name": "Training Materials",
+      "color": "#10B981",
+      "icon": "folder"
+    }
+  }'
+```
+
 ```json Request body
 {
   "resource": "document-folders",
@@ -446,6 +460,10 @@ const response = await ApiService.invoke(
 ## Delete folder
 
 Permanently deletes a folder. Documents in the folder are not deleted; they become uncategorized.
+
+<Note>
+  When a folder is deleted, any documents inside it are **unlinked**, not deleted. Their `folder_id` is set to `null`, making them appear as uncategorized in the knowledge base. You do not need to manually move documents before deleting a folder.
+</Note>
 
 <ParamField body="resource" type="string" required>
   Must be `"document-folders"`

@@ -115,6 +115,24 @@ const response = await ApiService.invoke("documents", "all", undefined, {
 });
 ```
 
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/documents \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "all",
+    "data": {
+      "limit": 50,
+      "offset": 0,
+      "filters": {
+        "searchTerm": "product",
+        "selectedPrivacy": "public",
+        "selectedType": "pdf_upload"
+      }
+    }
+  }'
+```
+
 ```json Request body
 {
   "resource": "documents",
@@ -221,6 +239,16 @@ const response = await ApiService.invoke(
 );
 ```
 
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/documents \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "get",
+    "id": "770e8400-e29b-41d4-a716-446655440002"
+  }'
+```
+
 ```json Request body
 {
   "resource": "documents",
@@ -324,6 +352,15 @@ Creates a new document by delegating to the document upload pipeline. Supports m
   </Expandable>
 </ResponseField>
 
+<Info>
+  The `create` action delegates to the internal document upload pipeline (`doc-upload` edge function). The nested `data.action` field determines which content source is used. Supported sub-actions:
+  - `upload-website` -- Extract content from a single URL
+  - `scrape-website` -- Crawl and parse website content
+  - `extract-youtube` -- Extract the transcript from a YouTube video URL
+  - `upload-pdf` -- Upload and process a PDF file
+  - `extract-document` -- Extract content from various document formats (DOCX, TXT, etc.)
+</Info>
+
 <CodeGroup>
 ```typescript ApiService.invoke()
 const response = await ApiService.invoke("documents", "create", undefined, {
@@ -332,6 +369,21 @@ const response = await ApiService.invoke("documents", "create", undefined, {
     url: "https://example.com/documentation",
   },
 });
+```
+
+```bash cURL
+curl -X POST https://<project-ref>.supabase.co/functions/v1/api/documents \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "create",
+    "data": {
+      "action": "upload-website",
+      "data": {
+        "url": "https://example.com/documentation"
+      }
+    }
+  }'
 ```
 
 ```json Request body

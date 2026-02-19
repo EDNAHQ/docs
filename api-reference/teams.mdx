@@ -23,6 +23,27 @@ All requests use a single endpoint: `POST /functions/v1/api` with `resource: "te
 | `cancel-invite` | No | No | Yes | Yes |
 | `remove-member` | No | No | Yes | Yes |
 
+<Warning>
+  Only team owners and internal admins can manage invitations and remove members. Regular team members have read-only access to `get` and `members` actions only.
+</Warning>
+
+### Team management workflow
+
+<Steps>
+  <Step title="Create a team">
+    Use the `create` action to set up a new team. The authenticated user automatically becomes the team owner.
+  </Step>
+  <Step title="Invite members">
+    Use the `invite` action to send invitations by email. Track pending invitations with the `invitations` action.
+  </Step>
+  <Step title="Members accept">
+    Invited users accept the invitation to join the team. Their profile is updated with the `team_id`.
+  </Step>
+  <Step title="Manage the team">
+    Use `members` to view the roster, `remove-member` to remove users, and `cancel-invite` to revoke pending invitations.
+  </Step>
+</Steps>
+
 ---
 
 ## Get a team
@@ -347,6 +368,20 @@ const response = await ApiService.invoke<{ invitation: TeamInvitation }>(
   },
   201
 );
+```
+
+```bash cURL
+curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "teams",
+    "action": "invite",
+    "id": "123",
+    "data": {
+      "email": "newmember@example.com"
+    }
+  }'
 ```
 </CodeGroup>
 

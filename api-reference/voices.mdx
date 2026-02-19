@@ -22,6 +22,16 @@ const response = await ApiService.invoke({
   action: "favorites",
 });
 ```
+
+```bash cURL
+curl -X POST https://your-project.supabase.co/functions/v1/api \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource": "voices",
+    "action": "favorites"
+  }'
+```
 </CodeGroup>
 
 ### Response
@@ -277,7 +287,13 @@ Records that a voice was used. This is a fire-and-forget operation; errors are l
 <ParamField body="data" type="object">
   <Expandable title="properties">
     <ParamField body="context" type="string">
-      The context in which the voice was used. One of `preview`, `select`, or `agent_creation`.
+      The context in which the voice was used. Valid values:
+
+      | Value | Description |
+      | --- | --- |
+      | `preview` | User previewed / listened to the voice sample |
+      | `select` | User selected the voice for an existing genie |
+      | `agent_creation` | Voice was chosen during new genie creation |
     </ParamField>
     <ParamField body="agentId" type="string">
       The genie ID, if the usage is related to genie creation or configuration.
@@ -288,6 +304,10 @@ Records that a voice was used. This is a fire-and-forget operation; errors are l
 <Note>
   Authentication is optional. Anonymous usage is tracked when no token is provided.
 </Note>
+
+<Tip>
+  Track-usage is a fire-and-forget operation. The endpoint always returns `{ success: true }` even if the underlying database write fails. Errors are logged server-side but are never surfaced to the caller, so it is safe to call without awaiting or error-handling.
+</Tip>
 
 <CodeGroup>
 ```typescript Request
