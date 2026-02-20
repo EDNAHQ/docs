@@ -1,12 +1,15 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "HelpGenie",
-  "description": "API documentation for the HelpGenie voice AI platform",
+  "name": "Help Genie",
+  "description": "API documentation for the Help Genie voice AI platform",
   "colors": {
     "primary": "#4E9CFF",
     "light": "#7BB8FF",
-    "dark": "#2B7FE8"
+    "dark": "#2B7FE8",
+    "background": {
+      "dark": "#0f172a"
+    }
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -88,8 +91,9 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png",
+    "href": "https://helpgenie.ai"
   },
   "navbar": {
     "links": [
