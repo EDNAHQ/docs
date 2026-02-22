@@ -1,0 +1,31 @@
+---
+title: "Analytics"
+description: "Account analytics and performance trend actions"
+---
+
+Use the `analytics` resource to fetch overview metrics, trends, genie performance, and period comparisons.
+
+<CodeGroup>
+```json Request body
+{
+  "resource": "analytics",
+  "action": "overview"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "data": {
+    "stats": {
+      "genies": 4,
+      "conversations": 312,
+      "leads": 58,
+      "knowledgeBaseDocuments": 19
+    }
+  }
+}
+```
+</CodeGroup>
+
+Supported actions: `all`, `overview`, `trends`, `genie-performance`, `compare`.

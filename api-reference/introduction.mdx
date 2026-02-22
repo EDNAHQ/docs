@@ -1,74 +1,109 @@
 ---
 title: "API reference"
-description: "Unified REST API for managing genies, documents, folders, and groups"
+description: "Complete API conventions: auth, request formats, errors, and core resources"
 ---
 
-## Base URL
+## Base URLs
 
-All API requests are sent to a single endpoint on your Supabase project:
+HelpGenie supports both REST-style routes and direct Supabase function invocation.
 
 ```
-POST https://<your-project>.supabase.co/functions/v1/api
+Primary: https://api.helpgenie.ai/v1
+Alternative: https://helpgenie.ai/api/v1
+Direct Supabase: https://<your-project>.supabase.co/functions/v1/api
 ```
 
-Every request uses the `POST` method with a JSON body that specifies the **resource**, **action**, and any required parameters.
+REST routes follow:
+
+```
+{BASE_URL}/{resource}[/{id}]
+```
 
 ## Authentication
 
-Include a Supabase session access token in the `Authorization` header of every request.
+All auth methods use the `Authorization` header.
 
 ```
-Authorization: Bearer <session_access_token>
+Authorization: Bearer <token>
+```
+
+### API key (recommended for external integrations)
+
+```
+Authorization: Bearer hg_live_...
+```
+
+- Prefix: `hg_live_`
+- Rate limit: `60 requests/minute` per key
+- Maximum `5` active keys per user
+
+### Session JWT (browser/app context)
+
+```
+Authorization: Bearer <supabase_access_token>
+```
+
+### Service role key (server-to-server)
+
+```
+Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>
+x-user-id: <user-uuid>
 Content-Type: application/json
 ```
 
-Obtain a token through Supabase Auth:
+## Request formats
 
-```typescript
-const {
-  data: { session },
-} = await supabase.auth.getSession();
-const accessToken = session?.access_token;
+### REST-style (recommended)
+
+```
+GET    /v1/{resource}         → action: "all"
+GET    /v1/{resource}/list    → action: "list"
+GET    /v1/{resource}/{id}    → action: "get"
+POST   /v1/{resource}         → action: "create"
+PATCH  /v1/{resource}/{id}    → action: "update"
+DELETE /v1/{resource}/{id}    → action: "delete"
 ```
 
-Requests without a valid token return a `401 UNAUTHORIZED` error.
-
-## Request format
-
-All requests share the same shape:
+### Custom actions (POST body)
 
 ```json
+POST /v1/{resource}
+{
+  "action": "custom-action",
+  "id": "optional-id",
+  "data": {}
+}
+```
+
+### Direct invocation (Supabase function)
+
+```json
+POST /functions/v1/api
 {
   "resource": "genies",
   "action": "list",
-  "id": "optional-resource-id",
-  "data": {
-    // action-specific parameters
-  }
+  "id": null,
+  "data": {}
 }
 ```
 
 <ParamField body="resource" type="string" required>
-  The API resource to operate on. One of `genies`, `documents`, `document-folders`, or `genie-groups`.
+  API resource name. Example: `genies`, `knowledge-base`, `integrations`, `api-keys`.
 </ParamField>
 
 <ParamField body="action" type="string" required>
-  The action to perform on the resource (for example `list`, `get`, `create`, `update`, `delete`).
+  Action for the selected resource (for example `list`, `get`, `create`, `update`, `delete`).
 </ParamField>
 
 <ParamField body="id" type="string">
-  The resource identifier, required for actions that target a specific record such as `get`, `update`, and `delete`.
+  Optional resource identifier for single-record actions.
 </ParamField>
 
 <ParamField body="data" type="object">
-  Action-specific parameters such as filters, pagination options, or field values.
+  Action-specific parameters (filters, pagination, payload fields).
 </ParamField>
 
 ## Response envelope
-
-Every response follows a consistent envelope.
-
-**Success (2xx):**
 
 ```json
 {
@@ -108,15 +143,15 @@ Every response follows a consistent envelope.
 
 ## Access control
 
-User roles determine what data is accessible:
+Roles determine access scope:
 
-- **internal_admin** -- Full access to all resources across all users.
-- **standard_user** -- Access only to their own genies, documents, and related data.
-- **consumer** -- Limited read-only access to assigned genies.
+- **internal_admin** - Full cross-account access.
+- **standard_user** - Access to their own business data.
+- **consumer** - Limited read-only/interaction access.
 
 Admin users can pass `adminMode: true` or a `userId` parameter to operate on resources owned by other users.
 
-## Resources
+## Resource map
 
 <CardGroup cols={2}>
   <Card title="Genies" icon="robot" href="/api-reference/genies">
@@ -130,5 +165,14 @@ Admin users can pass `adminMode: true` or a `userId` parameter to operate on res
   </Card>
   <Card title="Genie groups" icon="layer-group" href="/api-reference/genie-groups">
     Group and organize genies
+  </Card>
+  <Card title="API keys" icon="key-round" href="/api-reference/api-keys">
+    Create, revoke, and delete developer API keys
+  </Card>
+  <Card title="Goals" icon="target" href="/api-reference/goals">
+    Manage agent goals and outcomes
+  </Card>
+  <Card title="Capabilities" icon="sparkles" href="/api-reference/capabilities">
+    Discover resources and actions at runtime
   </Card>
 </CardGroup>

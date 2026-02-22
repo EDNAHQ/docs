@@ -1,0 +1,59 @@
+---
+title: "Goals"
+description: "Manage goal records and outcomes for agents"
+---
+
+Use `goals` to create and manage goal records associated with agents.
+
+Supported actions: `list`, `get`, `create`, `update`, `delete`.
+
+## List goals
+
+Common filters:
+
+- `limit` (1-1000, default `50`)
+- `offset` (default `0`)
+- `agentId`
+- `status`
+- `searchTerm`
+- `adminMode`, `userId` (admin scope override)
+
+## Get goal
+
+Use `action: "get"` with `id` set to the goal UUID.
+
+## Create goal
+
+Required fields:
+
+- `name`
+- `agent_id`
+
+Optional fields:
+
+- `description`
+- `status` (default `active`)
+- `priority`
+- `userId` (admin-only impersonation)
+
+## Update goal
+
+Use `action: "update"` with `id`, then provide any fields to patch.
+
+## Delete goal
+
+Use `action: "delete"` with `id` to permanently remove a goal.
+
+## Goal object
+
+<ResponseField name="id" type="string" />
+<ResponseField name="agent_id" type="string" />
+<ResponseField name="name" type="string" />
+<ResponseField name="description" type="string | null" />
+<ResponseField name="status" type="string" />
+<ResponseField name="priority" type="number | null" />
+<ResponseField name="created_at" type="string" />
+<ResponseField name="updated_at" type="string" />
+<ResponseField name="owner" type="object">
+  Present only in admin mode.
+</ResponseField>

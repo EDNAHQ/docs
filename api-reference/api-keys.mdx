@@ -1,0 +1,59 @@
+---
+title: "API keys"
+description: "Create and manage developer API keys for programmatic access"
+---
+
+Use `api-keys` to create, list, revoke, and delete API keys for the authenticated user.
+
+Supported actions: `all`, `list`, `create`, `revoke`, `delete`.
+
+## Authentication model
+
+<Warning>
+  API key management endpoints require a session token (JWT). You cannot manage API keys using another API key.
+</Warning>
+
+## Create key
+
+<ParamField body="resource" type="string" required>
+  Must be `"api-keys"`.
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  Must be `"create"`.
+</ParamField>
+
+<ParamField body="data.name" type="string" required>
+  Name for the key (for example `"Production"`).
+</ParamField>
+
+### Response (201)
+
+<ResponseField name="success" type="boolean" />
+<ResponseField name="data.api_key" type="object">
+  <Expandable title="properties">
+    <ResponseField name="id" type="string" />
+    <ResponseField name="name" type="string" />
+    <ResponseField name="key_prefix" type="string" />
+    <ResponseField name="key" type="string">
+      Returned once at creation time only.
+    </ResponseField>
+    <ResponseField name="is_active" type="boolean" />
+    <ResponseField name="last_used_at" type="string | null" />
+    <ResponseField name="created_at" type="string" />
+    <ResponseField name="revoked_at" type="string | null" />
+  </Expandable>
+</ResponseField>
+
+## Operational limits
+
+- Maximum `5` active keys per user.
+- Rate limit of `60 requests/minute` per key.
+
+## Revoke key
+
+Set `action` to `revoke` and pass `id` as the key ID.
+
+## Delete key
+
+Set `action` to `delete` and pass `id` as the key ID.

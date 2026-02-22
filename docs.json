@@ -71,7 +71,29 @@
             "pages": [
               "api-reference/profiles",
               "api-reference/teams",
-              "api-reference/activities"
+              "api-reference/activities",
+              "api-reference/goals",
+              "api-reference/api-keys"
+            ]
+          },
+          {
+            "group": "Expanded Platform",
+            "pages": [
+              "api-reference/analytics",
+              "api-reference/billing",
+              "api-reference/branding",
+              "api-reference/portals",
+              "api-reference/agent-pages",
+              "api-reference/activation-packs",
+              "api-reference/integrations",
+              "api-reference/automations",
+              "api-reference/integration-logs",
+              "api-reference/playbooks",
+              "api-reference/blog",
+              "api-reference/demo-genies",
+              "api-reference/email-templates",
+              "api-reference/email-logs",
+              "api-reference/capabilities"
             ]
           }
         ]
