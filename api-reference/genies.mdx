@@ -199,8 +199,8 @@ const page2 = await ApiService.invoke("genies", "all", undefined, {
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genies \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/genies \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "all",
@@ -421,8 +421,8 @@ const response = await ApiService.invoke(
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genies \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/genies \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "get",
@@ -653,8 +653,8 @@ const response = await ApiService.invoke("genies", "create", undefined, {
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genies \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/genies \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "create",

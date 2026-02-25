@@ -116,8 +116,8 @@ const response = await ApiService.invoke("documents", "all", undefined, {
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/documents \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/knowledge-base \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "all",
@@ -240,8 +240,8 @@ const response = await ApiService.invoke(
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/documents \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/knowledge-base \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "get",
@@ -372,8 +372,8 @@ const response = await ApiService.invoke("documents", "create", undefined, {
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/documents \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/knowledge-base \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "create",

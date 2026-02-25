@@ -10,7 +10,7 @@ HelpGenie supports both REST-style routes and direct Supabase function invocatio
 ```
 Primary: https://api.helpgenie.ai/v1
 Alternative: https://helpgenie.ai/api/v1
-Direct Supabase: https://<your-project>.supabase.co/functions/v1/api
+Direct Supabase: POST https://api.helpgenie.ai/v1
 ```
 
 REST routes follow:
@@ -75,10 +75,10 @@ POST /v1/{resource}
 }
 ```
 
-### Direct invocation (Supabase function)
+### Direct invocation (POST body)
 
 ```json
-POST /functions/v1/api
+POST https://api.helpgenie.ai/v1
 {
   "resource": "genies",
   "action": "list",

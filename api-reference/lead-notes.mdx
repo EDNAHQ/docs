@@ -3,7 +3,7 @@ title: "Lead notes"
 description: "Manage notes attached to leads with pinning support and full CRUD operations."
 ---
 
-All requests use a single endpoint: `POST /functions/v1/api` with `resource: "lead-notes"`.
+All requests use a single endpoint: `POST https://api.helpgenie.ai/v1` with `resource: "lead-notes"`.
 
 ## Access control
 
@@ -171,8 +171,8 @@ const note = response?.note;
 ```
 
 ```bash cURL
-curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/lead-notes \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "resource": "lead-notes",

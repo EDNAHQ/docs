@@ -23,7 +23,7 @@ const genies = await ApiService.invoke({
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -61,7 +61,7 @@ You can also call the Edge Function directly. The API accepts both a body-based 
     Send the resource, action, and data in the request body:
 
     ```bash
-    curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+    curl -X POST https://api.helpgenie.ai/v1 \
       -H "Authorization: Bearer <token>" \
       -H "Content-Type: application/json" \
       -d '{
@@ -76,22 +76,22 @@ You can also call the Edge Function directly. The API accepts both a body-based 
 
     ```bash
     # GET all genies
-    GET /functions/v1/api/genies
+    GET /v1/genies
 
     # GET a single genie
-    GET /functions/v1/api/genies/abc-123
+    GET /v1/genies/abc-123
 
     # GET list (compact format)
-    GET /functions/v1/api/genies/list
+    GET /v1/genies/list
 
     # CREATE a genie
-    POST /functions/v1/api/genies
+    POST /v1/genies
 
     # UPDATE a genie
-    PATCH /functions/v1/api/genies/abc-123
+    PATCH /v1/genies/abc-123
 
     # DELETE a genie
-    DELETE /functions/v1/api/genies/abc-123
+    DELETE /v1/genies/abc-123
     ```
   </Tab>
 </Tabs>
@@ -134,13 +134,13 @@ const genieList = await ApiService.invoke({
 
 ```bash cURL
 # Full records with all relations
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"resource": "genies", "action": "all"}'
 
 # Compact records for dropdowns
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"resource": "genies", "action": "list"}'
@@ -173,7 +173,7 @@ const newGenie = await ApiService.invoke({
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -202,7 +202,7 @@ const genie = await ApiService.invoke({
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -230,7 +230,7 @@ const updated = await ApiService.invoke({
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -258,7 +258,7 @@ await ApiService.invoke({
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -344,7 +344,7 @@ const trialGenie = await ApiService.invoke({
 When using REST-style HTTP requests, query parameters are automatically extracted and passed to handlers:
 
 ```bash
-GET /functions/v1/api/genies?limit=30&cursor=abc123
+GET /v1/genies?limit=30&cursor=abc123
 ```
 
 When using the body-based approach, include pagination and filter parameters in the `data` object:
@@ -363,7 +363,7 @@ const genies = await ApiService.invoke({
 ```
 
 ```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{

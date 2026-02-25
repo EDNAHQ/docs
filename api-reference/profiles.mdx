@@ -3,7 +3,7 @@ title: "Profiles"
 description: "Manage user profiles including account information, subscription details, and team associations."
 ---
 
-All requests use a single endpoint: `POST /functions/v1/api` with `resource: "profiles"`.
+All requests use a single endpoint: `POST https://api.helpgenie.ai/v1` with `resource: "profiles"`.
 
 ## Access control
 
@@ -229,11 +229,10 @@ const subscriptions = response?.profile?.call_purchases;
 ```
 
 ```bash cURL
-curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/profiles \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "resource": "profiles",
     "action": "get",
     "id": "d4f8e2a1-5b3c-4e9f-a1b2-c3d4e5f67890"
   }'

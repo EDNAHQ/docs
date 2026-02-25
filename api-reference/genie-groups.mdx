@@ -597,8 +597,8 @@ const response = await ApiService.invoke(
 ```
 
 ```bash cURL (assign to group)
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genie-groups \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/genie-groups \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "sync",
@@ -610,8 +610,8 @@ curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genie-groups \
 ```
 
 ```bash cURL (remove from group)
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api/genie-groups \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/genie-groups \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "sync",

@@ -3,7 +3,7 @@ title: "Leads"
 description: "Manage and query lead records associated with your agents, including filtering, statistics, and admin operations."
 ---
 
-All requests use a single endpoint: `POST /functions/v1/api` with `resource: "leads"`.
+All requests use a single endpoint: `POST https://api.helpgenie.ai/v1` with `resource: "leads"`.
 
 ## Access control
 
@@ -211,11 +211,10 @@ const response = await ApiService.invoke<{
 ```
 
 ```bash cURL
-curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/leads \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "resource": "leads",
     "action": "all",
     "data": {
       "filters": {
@@ -459,11 +458,10 @@ const response = await ApiService.invoke<{ lead: Lead }>(
 ```
 
 ```bash cURL
-curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST https://api.helpgenie.ai/v1/leads \
+  -H "Authorization: Bearer hg_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "resource": "leads",
     "action": "create",
     "data": {
       "agent_id": "agent-123",

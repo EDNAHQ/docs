@@ -3,7 +3,7 @@ title: "Marketplace"
 description: "Browse, search, and manage marketplace genie listings with categories and statistics."
 ---
 
-All requests use a single endpoint: `POST /functions/v1/api` with `resource: "marketplace"`.
+All requests use a single endpoint: `POST https://api.helpgenie.ai/v1` with `resource: "marketplace"`.
 
 ## Access control
 
@@ -120,10 +120,9 @@ const response = await ApiService.invoke<{
 ```
 
 ```bash cURL
-curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/api \
+curl -X POST https://api.helpgenie.ai/v1/marketplace \
   -H "Content-Type: application/json" \
   -d '{
-    "resource": "marketplace",
     "action": "list",
     "data": {
       "limit": 20,

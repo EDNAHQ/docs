@@ -5,10 +5,10 @@ description: "Learn about the HelpGenie API architecture and available resources
 
 ## Single endpoint architecture
 
-The HelpGenie API is served from a single Supabase Edge Function. Every request is a `POST` to the same URL:
+The HelpGenie API is served from a single endpoint. Every request is a `POST` to the same URL:
 
 ```
-POST https://<project-ref>.supabase.co/functions/v1/api
+POST https://api.helpgenie.ai/v1
 ```
 
 Instead of traditional REST routing with different URL paths per resource, HelpGenie uses a **resource/action pattern** in the request body. The `resource` field selects which entity to operate on, and the `action` field determines what to do.

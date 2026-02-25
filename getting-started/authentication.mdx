@@ -1,13 +1,51 @@
 ---
 title: "Authentication"
-description: "Authenticate with the HelpGenie API using Bearer tokens from Supabase Auth"
+description: "Authenticate with the HelpGenie API using API keys or session tokens"
 ---
 
-All API requests require a valid Bearer token in the `Authorization` header. Tokens are issued by Supabase Auth and tied to the authenticated user's session.
+All API requests require authentication. The recommended method for external integrations is an **API key**.
 
-## Getting a token
+## Method 1: API Key (recommended)
 
-Authenticate with Supabase Auth to obtain an access token. The exact method depends on your authentication flow (email/password, magic link, OAuth, etc.).
+Create an API key in [Help Genie](https://helpgenie.ai) → **Settings** → **API Keys** → **Create Key**.
+
+The full key is shown **once** — copy it immediately and store it securely. Keys use the `hg_live_` prefix.
+
+Pass your key using either method:
+
+<CodeGroup>
+
+```bash Authorization header
+curl https://api.helpgenie.ai/v1/genies \
+  -H "Authorization: Bearer hg_live_YOUR_KEY"
+```
+
+```bash X-API-Key header
+curl https://api.helpgenie.ai/v1/genies \
+  -H "X-API-Key: hg_live_YOUR_KEY"
+```
+
+```typescript fetch
+const response = await fetch("https://api.helpgenie.ai/v1/genies", {
+  headers: {
+    Authorization: "Bearer hg_live_YOUR_KEY",
+  },
+});
+
+const result = await response.json();
+```
+
+</CodeGroup>
+
+**Key details:**
+- Don't expire — work until revoked
+- Rate limited: **60 requests/minute** per key
+- Max **5 active keys** per user
+- Keys carry the same permissions as the user who created them
+
+## Method 2: Session Token (for browser/app contexts)
+
+For browser-based applications, authenticate with Supabase Auth:
 
 <CodeGroup>
 
@@ -19,28 +57,15 @@ const supabase = createClient(
   "<anon-key>"
 );
 
-// Sign in (email/password example)
 const { data, error } = await supabase.auth.signInWithPassword({
   email: "user@example.com",
   password: "your-password",
 });
 
-// Get the access token from the session
 const accessToken = data.session?.access_token;
 ```
 
-```typescript Existing session
-// If the user is already authenticated, retrieve the current session
-const {
-  data: { session },
-} = await supabase.auth.getSession();
-
-const accessToken = session?.access_token;
-```
-
 ```bash cURL
-# Supabase Auth exposes a REST endpoint for email/password sign-in.
-# Exchange credentials for an access token:
 curl -X POST "https://<project-ref>.supabase.co/auth/v1/token?grant_type=password" \
   -H "apikey: <anon-key>" \
   -H "Content-Type: application/json" \
@@ -48,23 +73,26 @@ curl -X POST "https://<project-ref>.supabase.co/auth/v1/token?grant_type=passwor
     "email": "user@example.com",
     "password": "your-password"
   }'
-
-# The response includes an access_token you can use for API requests:
-# {
-#   "access_token": "eyJhbGciOiJIUzI1NiIs...",
-#   "token_type": "bearer",
-#   "expires_in": 3600,
-#   "refresh_token": "v1.MRMx..."
-# }
 ```
 
 </CodeGroup>
 
+Then include the token in the `Authorization` header:
+
+```
+Authorization: Bearer <session_access_token>
+```
+
+Session tokens expire after ~1 hour. The Supabase client handles refresh automatically.
+
 ## Making authenticated requests
 
-Include the token in the `Authorization` header as a Bearer token:
-
 <CodeGroup>
+
+```bash cURL (API key)
+curl https://api.helpgenie.ai/v1/genies \
+  -H "Authorization: Bearer hg_live_YOUR_KEY"
+```
 
 ```typescript TypeScript (ApiService)
 import { ApiService } from "@/services/api/ApiService";
@@ -76,67 +104,35 @@ const genies = await ApiService.invoke({
 });
 ```
 
-```bash cURL
-curl -X POST https://<project-ref>.supabase.co/functions/v1/api \
-  -H "Authorization: Bearer <access-token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resource": "genies",
-    "action": "all"
-  }'
-```
-
-```typescript fetch
-const response = await fetch(
-  "https://<project-ref>.supabase.co/functions/v1/api",
-  {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      resource: "genies",
-      action: "all",
-    }),
-  }
-);
+```typescript fetch (session token)
+const response = await fetch("https://api.helpgenie.ai/v1/genies", {
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+  },
+});
 
 const result = await response.json();
 ```
 
 </CodeGroup>
 
-## Token expiry
-
-Supabase access tokens expire after a set duration (typically 1 hour). The Supabase client library handles token refresh automatically when using `supabase.auth.getSession()` or `supabase.auth.onAuthStateChange()`.
-
-If you manage tokens manually, watch for `UNAUTHORIZED` or `INVALID_TOKEN` errors and refresh the session:
-
-```typescript
-const { data, error } = await supabase.auth.refreshSession();
-const newToken = data.session?.access_token;
-```
-
-<Warning>
-  Do not hard-code access tokens. They are short-lived and tied to individual user sessions. Always retrieve fresh tokens from the Supabase Auth session.
-</Warning>
-
 ## Authentication errors
 
 | Error code | HTTP status | Description |
 | --- | --- | --- |
-| `UNAUTHORIZED` | 401 | The `Authorization` header is missing or does not contain a Bearer token. |
-| `INVALID_TOKEN` | 401 | The token is malformed, expired, or has been revoked. |
+| `UNAUTHORIZED` | 401 | No authentication header provided. |
+| `INVALID_KEY_PREFIX` | 401 | API key doesn't start with `hg_live_` or `hg_admin_`. |
+| `KEY_NOT_FOUND` | 401 | API key not found or has been revoked. |
+| `INVALID_TOKEN` | 401 | Session token is malformed, expired, or revoked. |
 
-Both errors return the standard error envelope:
+Example error response:
 
 ```json
 {
   "success": false,
   "error": {
     "code": "UNAUTHORIZED",
-    "message": "Missing or invalid Authorization header",
+    "message": "No authentication provided. Include an Authorization header with 'Bearer hg_live_YOUR_KEY' or set the X-API-Key header.",
     "status": 401
   }
 }
